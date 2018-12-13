@@ -1,0 +1,106 @@
+---
+title: "The Effect of Media Reports on US Suicide Rate"
+author: Amita Ketkar, Jui Kothari, Xinye Qiu, Yiwen Zhang (In alphabetic order)
+date: 2018-12-13
+output: html_document
+---
+
+###Overview and Motivation: 
+*__Provide an overview of the project goals and the motivation for it. Consider that this will be read by people who did not see your project proposal__*  
+With increase in rates of suicides, media attention for this issue has increased over the years. As a common interest among the group members, we decided to analyze the statistics and media coverage and possibly effects of the additional media coverage and awareness on policy along with basic epidemiology of Suicide and Conversely effect of policy changes on the suicide rates. (we might not need to include policy study)  
+
+###Related Work: 
+*__Anything that inspired you, such as a paper, a web site, or something we discussed in class__*
+
+###Initial Questions: 
+*__What questions are you trying to answer?__*  
+Major   
+1.How media coverage on suicide in each state affects the suicide rate (CDC documented)?   
+2.How policy awareness affects the suicide rate across the states (CDC documented)? (no policy information)  
+3.How policy change affects the suicide rate across the states (CDC documented)?  
+Minor  
+4. Distribution of suicide rate across all states    
+5. Distribution of media coverage of suicide rates across all states   
+6. The focus of media coverage in suicide related articles   
+7. Subgroup analysis of suicide rate among male/female and different races  
+8. Time trend of suicide rate across different years available in different states and the whole US  
+9. Methods used (differences between states, firearm use and gun laws?)  
+10. Distribution of known mental health conditions across states  
+
+###Data: Source, scraping method, cleanup, etc.
+We got our data from CDC wonder database through open-source request and MediaCloud, which is an open source platform for studying media ecosystems.  
+
+Key codes during data cleaning: 
+```{r}
+
+```
+
+###Exploratory Analysis: 
+What visualizations did you use to look at your data in different ways?   
+What are the different statistical methods you considered?   
+Justify the decisions you made, and show any major changes to your ideas  
+How did you reach these conclusions?  
+
+See workflow below 
+
+Data Quality Check(missingness and distribution)
+```{r}
+
+```
+
+Based on CDC data, we tried:  
+1.1999-2010 background plot
+```{r}
+
+```
+
+2.Combine rates over time (Probably stratify them based on age, race , gender, state)
+```{r}
+
+```
+
+3.Have a map plot showing each state, when you click on each state, could have individual state information
+```{r}
+
+```
+
+Based on Media Cloud data, we tried: 
+```{r}
+
+```
+
+###Final Analysis (merged analysis):
+**What did you learn about the data?**  
+summary characteristics (maybe in tibble format)
+```{r}
+
+```
+
+**How did you answer the questions?**
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+
+```{r}
+
+```
+
+**How can you justify your answers?**
+
+
+###Literatures and Online Sources:
+
+ 
+
+
