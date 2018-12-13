@@ -29,4 +29,7 @@ media <- media %>% separate(media_pub_state, c("state", "country"), ",")
 
 #Create a variable with state abbreviations from the state name
 media <- media %>% mutate(state_abb = ifelse(nchar(state)>2, state.abb[match(state, state.name)], state))
+
+#Find titles that include the term 'suicid' and create a new variable "suicide_title"" that returns 1 if "suicid" is present, else 0
+media <- media %>% mutate(suicide_title = ifelse(str_detect(title, "suicid"), 1, 0))
 ```
