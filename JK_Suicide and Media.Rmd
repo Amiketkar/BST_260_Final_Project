@@ -1,0 +1,32 @@
+---
+title: "JK"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(openintro)
+```
+
+```{r}
+### CLEANING MEDIA DATA
+#Read the media data
+media <- read.csv("suicid-or-suicid-and-sampled-stories-20181211184806.csv")
+
+#Extract the year information from the publication date
+media <- media %>% mutate(date = mdy_hm(publish_date))
+media <- media %>% mutate(year = year(date), month = month(date), day = day(date))
+media <- media %>% filter(language == "en")
+
+#Separate the publication state (state, year) into 2 separate variables: state and country
+media <- media %>% separate(media_pub_state, c("state", "country"), ",")
+
+#Create a variable with state abbreviations from the state name
+media <- media %>% mutate(state_abb = ifelse(nchar(state)>2, state.abb[match(state, state.name)], state))
+```
