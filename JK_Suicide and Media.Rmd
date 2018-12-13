@@ -12,6 +12,8 @@ library(dplyr)
 library(tidyverse)
 library(lubridate)
 library(openintro)
+library(usmap)
+library(gridExtra)
 ```
 
 ```{r}
@@ -57,6 +59,131 @@ p2 <- media2 %>%
 print(p2)
 ```
 
+
+
 ```{r}
+###`usmap` plots
+#Create data for 2011 
+map_2011 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2011") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2011 <- map_2011[!(map_2011$state == ""),]
+map_2011 <- map_2011[!is.na(map_2011$state),]
+#Plot
+p_2011 <- plot_usmap(data = as.data.frame(map_2011), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position="none")
+
+
+#Create data for 2012 
+map_2012 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2012") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2012 <- map_2012[!(map_2012$state == ""),]
+map_2012 <- map_2012[!is.na(map_2012$state),]
+#Plot
+p_2012 <- plot_usmap(data = as.data.frame(map_2012), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position="none")
+
+
+#Create data for 2013 
+map_2013 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2013") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2013 <- map_2013[!(map_2013$state == ""),]
+map_2013 <- map_2013[!is.na(map_2013$state),]
+#Plot
+p_2013 <- plot_usmap(data = as.data.frame(map_2013), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position="none")
+
+
+#Create data for 2014 
+map_2014 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2014") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2014 <- map_2014[!(map_2014$state == ""),]
+map_2014 <- map_2014[!is.na(map_2014$state),]
+#Plot
+p_2014 <- plot_usmap(data = as.data.frame(map_2014), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position="none")
+
+
+#Create data for 2015 
+map_2015 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2015") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2015 <- map_2015[!(map_2015$state == ""),]
+map_2015 <- map_2015[!is.na(map_2015$state),]
+#Plot
+p_2015 <- plot_usmap(data = as.data.frame(map_2015), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position="none")
+
+
+#Create data for 2016 
+map_2016 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2016") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2016 <- map_2016[!(map_2016$state == ""),]
+map_2016 <- map_2016[!is.na(map_2016$state),]
+#Plot
+p_2016 <- plot_usmap(data = as.data.frame(map_2016), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories")  +
+  theme(legend.position="none")
+
+
+#Create data for 2017 
+map_2017 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2017") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2017 <- map_2017[!(map_2017$state == ""),]
+map_2017 <- map_2017[!is.na(map_2017$state),]
+#Plot
+p_2017 <- plot_usmap(data = as.data.frame(map_2017), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position="none")
+
+
+#Create data for 2018 
+map_2018 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2018") %>% 
+  summarize(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2018 <- map_2018[!(map_2018$state == ""),]
+map_2018 <- map_2018[!is.na(map_2018$state),]
+#Plot
+p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  theme(legend.position = "right")
+
+grid.arrange(p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018, nrow = 4)
 
 ```
+
+
