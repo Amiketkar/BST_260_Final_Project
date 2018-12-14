@@ -261,11 +261,12 @@ combined_plot <- function(x) {
   full %>% 
   filter(state_abb == x) %>% 
   ggplot(aes(x = year)) + 
-  geom_smooth(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate")) + 
-  geom_smooth(aes(y = articles/2, group = 1, colour = "Number of Articles")) + 
+  geom_line(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate"), size = 0.75) + 
+  geom_point(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate"), size = 2) +
+  geom_line(aes(y = articles/2, group = 1, colour = "Number of Articles"), size = 0.75) + 
+  geom_point(aes(y = articles/2, group = 1, colour = "Number of Articles"), shape = 18, size = 3) +
   scale_y_continuous(sec.axis = sec_axis(~.*2, name = "Number of Articles on Suicide")) +
-  scale_colour_manual(values = c("blue", "red")) + 
-  xlab("Year") + ylab("Suicide Death Rate per million people") + ggtitle(paste(ifelse(x == "DC", "District of Columbia", state.name[match(x, state.abb)])))}
+  xlab("Year") + ylab("Suicide Death Rate per million people") + ggtitle(paste(ifelse(x == "DC", "District of Columbia", state.name[match(x, state.abb)]))) + theme(legend.title = element_blank())}
   
 #Example: Can be used for any state using the state abbreviation
 combined_plot("IL")
