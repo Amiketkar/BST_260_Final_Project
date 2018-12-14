@@ -232,8 +232,8 @@ print(p_top_suicide)
 ```{r}
 ###CDC###
 #'rate_pmil' is the crude rate per million people i.e. the number of deaths per state population per 1 million people
-cdc <- read.csv("cdc_statesuicide_1999_2016.csv")
-cdc_join <- cdc %>% mutate(year = as.factor(year)) %>%
+cdc_data <- read.csv("new_cdc.csv")
+cdc_join <- cdc_data %>% mutate(year = as.factor(year)) %>%
   group_by(year, state) %>%
   summarise(deaths = sum(death), populations = sum(population), rate_pmil = (deaths/populations)*1000000)
 cdc_join <- cdc_join %>% 
@@ -269,4 +269,5 @@ combined_plot <- function(x) {
   
 #Example: Can be used for any state using the state abbreviation
 combined_plot("IL")
+combined_plot("CA")
 ```
