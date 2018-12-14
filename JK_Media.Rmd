@@ -8,6 +8,8 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+###LOAD PACKAGES
+
 ```{r}
 library(dplyr)
 library(tidyverse)
@@ -17,6 +19,7 @@ library(usmap)
 library(gridExtra)
 ```
 
+###CLEAN MEDIA DATA
 ```{r}
 ### CLEANING MEDIA DATA
 #Read the media data
@@ -39,6 +42,8 @@ media <- media %>% mutate(state_abb = ifelse(nchar(state)>2, state.abb[match(sta
 media <- media %>% mutate(suicide_title = ifelse(str_detect(title, "suicid"), 1, 0))
 ```
 
+
+###COUNT AND RATIO PLOTS
 ```{r}
 ###COUNT AND RATIO PLOTS
 #Count plot
@@ -61,7 +66,7 @@ print(p2)
 ```
 
 
-
+###USMAP PLOTS FOR MEDIA
 ```{r}
 ###`usmap` plots
 #Create data for 2011 
@@ -185,3 +190,47 @@ p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") +
 
 grid.arrange(p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018, nrow = 4)
 ```
+
+
+###TOP10 MEDIA & SUICIDE PLOTS
+```{r}
+###PLOT OF TOP MEDIA SOURCES REPORTING ON SUICIDE
+#Top 10 media sources with articles on suicide
+top_media <- media %>% 
+  group_by(media_name) %>%
+  summarize(total = n())%>%
+  arrange(desc(total))
+
+p_top_media <- ggplot(data = subset(top_media, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  xlab("Media Name") + ylab("Number of Articles") + 
+  ggtitle("Top 10: Media Sources with Articles on Suicide (2011-2018)")
+print(p_top_media)
+
+#Top 10 media sources with suicide in the article title
+top_suicide <- media %>%
+  group_by(media_name) %>% 
+  summarize(total = sum(suicide_title)) %>%
+  arrange(desc(total))
+
+p_top_suicide <- ggplot(data = subset(top_suicide, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  xlab("Media Name") + ylab("Number of Articles") + 
+  ggtitle("Top 10: Media Sources with 'Suicide' in the Article Titles (2011-2018)")
+print(p_top_suicide)
+```
+
+
+###CDC
+```{r}
+###CDC###
+cdc <- read.csv("cdc_statesuicide_1999_2016.csv")
+cdc_join <- cdc %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state) %>%
+  summarise(death = sum(death)) 
+cdc_join <- cdc_join %>% 
+  mutate(stateID = ifelse(state == "District of Columbia", "DC", state.abb[match(state, state.name)]))
+```
+
