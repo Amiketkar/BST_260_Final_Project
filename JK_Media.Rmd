@@ -114,10 +114,9 @@ map_2011 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2011") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2011 <- map_2011[!(map_2011$state == ""),]
-map_2011 <- map_2011[!is.na(map_2011$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2011 <- plot_usmap(data = as.data.frame(map_2011), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -130,10 +129,9 @@ map_2012 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2012") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2012 <- map_2012[!(map_2012$state == ""),]
-map_2012 <- map_2012[!is.na(map_2012$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2012 <- plot_usmap(data = as.data.frame(map_2012), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -145,10 +143,9 @@ map_2013 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2013") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2013 <- map_2013[!(map_2013$state == ""),]
-map_2013 <- map_2013[!is.na(map_2013$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2013 <- plot_usmap(data = as.data.frame(map_2013), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -160,10 +157,9 @@ map_2014 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2014") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2014 <- map_2014[!(map_2014$state == ""),]
-map_2014 <- map_2014[!is.na(map_2014$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2014 <- plot_usmap(data = as.data.frame(map_2014), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -175,10 +171,9 @@ map_2015 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2015") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2015 <- map_2015[!(map_2015$state == ""),]
-map_2015 <- map_2015[!is.na(map_2015$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2015 <- plot_usmap(data = as.data.frame(map_2015), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -190,10 +185,9 @@ map_2016 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2016") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2016 <- map_2016[!(map_2016$state == ""),]
-map_2016 <- map_2016[!is.na(map_2016$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2016 <- plot_usmap(data = as.data.frame(map_2016), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories")  +
@@ -205,10 +199,9 @@ map_2017 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2017") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2017 <- map_2017[!(map_2017$state == ""),]
-map_2017 <- map_2017[!is.na(map_2017$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2017 <- plot_usmap(data = as.data.frame(map_2017), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -220,10 +213,9 @@ map_2018 <- media %>%
   group_by(state_abb) %>% 
   filter (year == "2018") %>% 
   summarise(num_title = n()) %>%
-  rename(state = state_abb)
-#Format the data
-map_2018 <- map_2018[!(map_2018$state == ""),]
-map_2018 <- map_2018[!is.na(map_2018$state),]
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
 #Plot
 p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") + 
   scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
@@ -232,7 +224,9 @@ p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") +
 
 #Plot all
 grid.arrange(p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018, ncol = 2, nrow = 4)
+```
 
+```{r}
 ###FIND STATES WITH THE LARGEST DIFFERENCE BETWEEN 2011 AND 2018
 diff <- full_join(map_2011, map_2018, by = "state") 
 diff <- diff %>% mutate(difference = num_title.y - num_title.x)
@@ -324,7 +318,6 @@ combined_plot <- function(x) {
 combined_plot("IL")
 combined_plot("CA")
 ```
-
 
 
 

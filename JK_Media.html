@@ -289,10 +289,9 @@ map_2011 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2011&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2011 &lt;- map_2011[!(map_2011$state == &quot;&quot;),]
-map_2011 &lt;- map_2011[!is.na(map_2011$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2011 &lt;- plot_usmap(data = as.data.frame(map_2011), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
@@ -305,10 +304,9 @@ map_2012 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2012&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2012 &lt;- map_2012[!(map_2012$state == &quot;&quot;),]
-map_2012 &lt;- map_2012[!is.na(map_2012$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2012 &lt;- plot_usmap(data = as.data.frame(map_2012), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
@@ -320,10 +318,9 @@ map_2013 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2013&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2013 &lt;- map_2013[!(map_2013$state == &quot;&quot;),]
-map_2013 &lt;- map_2013[!is.na(map_2013$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2013 &lt;- plot_usmap(data = as.data.frame(map_2013), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
@@ -335,10 +332,9 @@ map_2014 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2014&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2014 &lt;- map_2014[!(map_2014$state == &quot;&quot;),]
-map_2014 &lt;- map_2014[!is.na(map_2014$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2014 &lt;- plot_usmap(data = as.data.frame(map_2014), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
@@ -350,10 +346,9 @@ map_2015 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2015&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2015 &lt;- map_2015[!(map_2015$state == &quot;&quot;),]
-map_2015 &lt;- map_2015[!is.na(map_2015$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2015 &lt;- plot_usmap(data = as.data.frame(map_2015), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
@@ -365,10 +360,9 @@ map_2016 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2016&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2016 &lt;- map_2016[!(map_2016$state == &quot;&quot;),]
-map_2016 &lt;- map_2016[!is.na(map_2016$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2016 &lt;- plot_usmap(data = as.data.frame(map_2016), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;)  +
@@ -380,10 +374,9 @@ map_2017 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2017&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2017 &lt;- map_2017[!(map_2017$state == &quot;&quot;),]
-map_2017 &lt;- map_2017[!is.na(map_2017$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2017 &lt;- plot_usmap(data = as.data.frame(map_2017), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
@@ -395,10 +388,9 @@ map_2018 &lt;- media %&gt;%
   group_by(state_abb) %&gt;% 
   filter (year == &quot;2018&quot;) %&gt;% 
   summarise(num_title = n()) %&gt;%
-  rename(state = state_abb)
-#Format the data
-map_2018 &lt;- map_2018[!(map_2018$state == &quot;&quot;),]
-map_2018 &lt;- map_2018[!is.na(map_2018$state),]
+  rename(state = state_abb) %&gt;%
+  filter(state != &quot;&quot;) %&gt;% 
+  filter(!is.na(state))
 #Plot
 p_2018 &lt;- plot_usmap(data = as.data.frame(map_2018), values = &quot;num_title&quot;) + 
   scale_fill_gradientn(limits = c(0,700), colours=c(&quot;white&quot;, &quot;red&quot;, &quot;red1&quot;, &quot;red2&quot;, &quot;red3&quot;, &quot;red4&quot;), name = &quot;# of Stories&quot;) +
