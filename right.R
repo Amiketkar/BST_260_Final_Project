@@ -43,12 +43,15 @@ ui <- tagList(
       tabPanel("Media Coverage",
                fluidRow(
                   mainPanel(plotOutput("media_count_year", click = "plot1_click")),
-                  sidebarPanel(verbatimTextOutput("map1_detail"))
+                  sidebarPanel("Click each spike to see number of articles about suicide published on that date:",
+                    verbatimTextOutput("map1_detail"))
                ),
+               
                tags$hr(),
                fluidRow(
                  mainPanel(plotOutput("media_ratio_year", click = "plot2_click")),
-                 sidebarPanel(verbatimTextOutput("map2_detail"))
+                 sidebarPanel("Click each spike to see the ratio of articles about suicide published on that date:",
+                              verbatimTextOutput("map2_detail"))
                ),
                
                tags$hr(),
@@ -56,7 +59,8 @@ ui <- tagList(
                  column(8, 
                         imageOutput("media_map")),
                  column(4, 
-                        sliderInput("year_media_input", "Choose a Year:", min=2011, max=2018, value=1, step=1, animate = TRUE)
+                        sliderInput("year_media_input", "Choose a Year: (or click to see animation)", 
+                                    min=2011, max=2018, value=1, step=1,animate = TRUE)
                  )
                  
                ),
@@ -72,19 +76,19 @@ ui <- tagList(
       
       tabPanel("Suicide data from CDC", 
                fluidRow(
-                 column(6, plotOutput("national_trend"))
+                 column(6, offset=3, plotOutput("national_trend"))
                 
                ),
                tags$hr(),
                fluidRow(
-                 column(6, plotOutput("race_gender"))
+                 column(6, offset=3, plotOutput("race_gender"))
                ),
                tags$hr(),
                fluidRow(
                     column(8, 
                         imageOutput("cdc_map")),
                  column(4, 
-                   sliderInput("year_input", "Choose a Year:", min=2011, max=2016, value=1, step=1, animate = TRUE)
+                   sliderInput("year_input", "Choose a Year: (or click to see animation)", min=2011, max=2016, value=1, step=1, animate = TRUE)
                  )
               
                )
@@ -92,12 +96,12 @@ ui <- tagList(
       
       tabPanel("Media & Suicide", 
                fluidRow(
-                 column(10, imageOutput("combined_map"))
+                 column(8, offset=2, imageOutput("combined_map"))
                ),
                tags$br(),
                fluidRow(
-                 column(3, wellPanel(
-                   selectInput("select_state", "Select a State",
+                 column(4, offset=4, wellPanel(
+                   selectInput("select_state", "Choose a State:",
                                c("AK", "AL", "AR", "AZ", "CA", "CO", "CT", "DC",
                                  "DE", "FL", "GA", "HI", "IA", "ID", "IL", "IN",
                                  "KS", "KY", "LA", "MA", "MD", "ME", "MI", "MN",
@@ -127,7 +131,7 @@ server <- function(input, output) {
       geom_line(colour = "darkorchid4") + 
       scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) +
       xlab("Year")+ ylab("Count") + ggtitle("Suicide-Related Articles Published on Each Day") + theme_bw() +
-        theme(plot.title=element_text(size=20, face="bold.italic"),
+        theme(plot.title=element_text(size=20, face="bold"),
               axis.title.x=element_text(size=15),
               axis.title.y=element_text(size=15),
               text=element_text(size=15)
@@ -140,6 +144,7 @@ server <- function(input, output) {
   output$map1_detail <- renderPrint({
     media2_plot1_click()$count
   })
+ 
   
 # ratio plot 
   output$media_ratio_year <- renderPlot({
@@ -148,7 +153,7 @@ server <- function(input, output) {
       geom_line(colour = "darkorchid4") + 
       scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) +
       xlab("Year")+ ylab("Ratio") + ggtitle("Ratio of Suicide-Related Articles to All Articles Published on Each Day") + theme_bw() +
-      theme(plot.title=element_text(size=20, face="bold.italic"),
+      theme(plot.title=element_text(size=20, face="bold"),
             axis.title.x=element_text(size=15),
             axis.title.y=element_text(size=15),
             text=element_text(size=15)
@@ -160,8 +165,8 @@ server <- function(input, output) {
   })
   output$map2_detail <- renderPrint({
     media2_plot2_click()$ratio
-  }) 
-  
+  })
+
 # Media_USMAP plots
   
   media_year_data <- reactive({
@@ -178,7 +183,7 @@ server <- function(input, output) {
     plot_usmap(data = as.data.frame(media_year_data()), values = "num_title") + 
     scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
     theme(legend.position="right") + ggtitle("Media Coverate Across US States by year") +
-      theme(plot.title=element_text(size=20, face="bold.italic"),
+      theme(plot.title=element_text(size=20, face="bold"),
             legend.text=element_text(size=15),
             legend.title=element_text(size=15))
     
@@ -196,7 +201,7 @@ server <- function(input, output) {
       coord_flip() + 
       xlab("Media Name") + ylab("Number of Articles") + 
       ggtitle("Top 10: Media Sources with Articles on Suicide (2011-2018)") + theme_bw() +
-      theme(plot.title=element_text(size=20, face="bold.italic"),
+      theme(plot.title=element_text(size=20, face="bold"),
             axis.title.x=element_text(size=15),
             axis.title.y=element_text(size=15),
             text=element_text(size=15)
@@ -215,7 +220,7 @@ server <- function(input, output) {
       coord_flip() + 
       xlab("Media Name") + ylab("Number of Articles") +  
       ggtitle("Top 10: Media Sources with 'Suicide' in the Article Titles (2011-2018)") + theme_bw() +
-      theme(plot.title=element_text(size=20, face="bold.italic"),
+      theme(plot.title=element_text(size=20, face="bold"),
             axis.title.x=element_text(size=15),
             axis.title.y=element_text(size=15),
             text=element_text(size=15)
@@ -310,11 +315,12 @@ cdc_year_data <- reactive({
       scale_y_continuous(sec.axis = sec_axis(~.*2, name = "Number of Articles on Suicide")) +
       xlab("Year") + ylab("Suicide Death Rate per million people") + 
       ggtitle("Media Coverage and Suicide Trends by State") + theme(legend.title = element_blank()) + theme_bw() +
-      theme(plot.title=element_text(size=20, face="bold.italic"),
+      theme(plot.title=element_text(size=20, face="bold", hjust=0.5, vjust=1),
+            legend.position="bottom",
             legend.text=element_text(size=15),
             legend.title=element_text(size=15),
             axis.title.x=element_text(size=15),
-            axis.title.y=element_text(size=15),
+            axis.title.y=element_text(size=15, vjust=1),
             text=element_text(size=15))
     
   })
