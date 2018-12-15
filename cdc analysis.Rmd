@@ -120,13 +120,22 @@ cdc=read.csv('new_cdc.csv')
 summary(cdc)
 ```
 
-###Line plot or time series plot to show the national time trend from 1999-2016
 ```{r}
 #load packages
 library(ggplot2)
-library(dplyr)
 library(ggthemes)
 library(ggrepel)
+library(XML)
+library(reshape2)
+library(plyr)
+library(dplyr)
+library(usmap)
+```
+
+###Line plot or time series plot to show the national time trend from 1999-2016
+We explored our cdc data by making a time series plot that could show tha national time trend of the suicde rate to see if there is any temporal pattern of the actual suicide rate. 
+
+```{r}
 #create subset and have national average for each year
 cdc_national=cdc %>% group_by(year) %>% mutate(national_rate=mean(crude_rate)) %>% arrange(year)
 cdc_national=cdc_national %>% select('year','national_rate')
@@ -147,16 +156,10 @@ p
 ggsave('national_trend.pdf')
 ```
 
-A: From the national trend plot, we could see that the US nationwide suicide rate increased a lot from 192 counts per 100,000 population at 1999 to 236 counts per population at 2010, flucturated around 230 counts per 100,000 population during year 2010 to 2015 and dropped sharply at 2016. This indicated that recent years, the US society is experiencing a severe increasing suicide problem. And we further hypothesized that there could be an effect on the suicide rate across the nation induced by increaseing media coverage after 2015. 
+From the national trend plot, we could see that the US nationwide suicide rate increased a lot from 192 counts per 100,000 population at 1999 to 236 counts per population at 2010, flucturated around 230 counts per 100,000 population during year 2010 to 2015 and dropped sharply at 2016. This indicated that recent years, the US society is experiencing a severe increasing suicide problem. And we further hypothesized that there could be an effect on the suicide rate across the nation induced by increaseing media coverage after 2015. 
 
 ###Contrasting race stratified Female-Male suicide rate bar plot for year 2011-2016
 ```{r}
-#load packages
-library(XML)
-library(reshape2)
-library(ggplot2)
-library(plyr)
-library(dplyr)
 #restricting to recent years 2011-2016 and present average
 cdc_subpop=cdc %>% filter(year %in% c('2011','2012','2013','2014','2015','2016'))
 cdc_subpop=cdc_subpop %>% 
@@ -191,10 +194,6 @@ A: In order see the sub-population variation in the national suicide rate, we pl
 
 ###Maps with 51 states showing their own recent years suicide rate for year 2011 to 2016
 ```{r}
-#load packages
-library(dplyr)
-library(usmap)
-library(ggplot2)
 #restricting to recent years 2011-2016 for each year and present average rate on the map
 #2011
 cdc_state2011=cdc %>% filter(year %in% c('2011'))
