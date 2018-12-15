@@ -16,6 +16,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ##LOAD PACKAGES
 ```{r}
+library(plyr)
+library(ggplot2)
 library(dplyr)
 library(tidyverse)
 library(lubridate)
@@ -23,9 +25,9 @@ library(openintro)
 library(usmap)
 library(gridExtra)
 library(grid)
-library(ggplot2)
 library(dslabs)
-ds_theme_set()
+library(ggrepel)
+library(ggthemes)
 ```
 
 ##MOTIVATION
@@ -83,7 +85,7 @@ p1 <- media2 %>%
   ggplot(aes(date, count, group = 1)) + 
   geom_line(colour = "darkorchid4") + 
   scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) + 
-  xlab("Year") + ylab("Count") + ggtitle("Suicide-Related Articles Published Every Day")
+  xlab("Year") + ylab("Count") + ggtitle("Suicide-Related Articles Published Every Day") + theme_bw()
 
 print(p1)
   
@@ -92,7 +94,7 @@ p2 <- media2 %>%
   ggplot(aes(date, ratio, group = 1)) + 
   geom_line(colour = "darkorchid4") + 
   scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) + 
-  xlab("Year") + ylab("Ratio") + ggtitle("Comparing Suicide-Related Articles to All Articles Published Every Day")
+  xlab("Year") + ylab("Ratio") + ggtitle("Comparing Suicide-Related Articles to All Articles Published Every Day") + theme_bw()
   
 print(p2)
 ```
@@ -110,121 +112,122 @@ Note: There is missing data for media coverage of suicide in some states for the
 map_2011 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2011") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2011 <- map_2011[!(map_2011$state == ""),]
 map_2011 <- map_2011[!is.na(map_2011$state),]
 #Plot
 p_2011 <- plot_usmap(data = as.data.frame(map_2011), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
-  theme(legend.position="none") + ggtitle("2011")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2011")
 
+#"yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"
 
 #Create data for 2012 
 map_2012 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2012") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2012 <- map_2012[!(map_2012$state == ""),]
 map_2012 <- map_2012[!is.na(map_2012$state),]
 #Plot
 p_2012 <- plot_usmap(data = as.data.frame(map_2012), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
-  theme(legend.position="none") + ggtitle("2012")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2012")
 
 
 #Create data for 2013 
 map_2013 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2013") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2013 <- map_2013[!(map_2013$state == ""),]
 map_2013 <- map_2013[!is.na(map_2013$state),]
 #Plot
 p_2013 <- plot_usmap(data = as.data.frame(map_2013), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
-  theme(legend.position="none") + ggtitle("2013")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2013")
 
 
 #Create data for 2014 
 map_2014 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2014") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2014 <- map_2014[!(map_2014$state == ""),]
 map_2014 <- map_2014[!is.na(map_2014$state),]
 #Plot
 p_2014 <- plot_usmap(data = as.data.frame(map_2014), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
-  theme(legend.position="none") + ggtitle("2014")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2014")
 
 
 #Create data for 2015 
 map_2015 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2015") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2015 <- map_2015[!(map_2015$state == ""),]
 map_2015 <- map_2015[!is.na(map_2015$state),]
 #Plot
 p_2015 <- plot_usmap(data = as.data.frame(map_2015), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
-  theme(legend.position="none") + ggtitle("2015")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2015")
 
 
 #Create data for 2016 
 map_2016 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2016") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2016 <- map_2016[!(map_2016$state == ""),]
 map_2016 <- map_2016[!is.na(map_2016$state),]
 #Plot
 p_2016 <- plot_usmap(data = as.data.frame(map_2016), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories")  +
-  theme(legend.position="none") + ggtitle("2016")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories")  +
+  theme(legend.position="right") + ggtitle("2016")
 
 
 #Create data for 2017 
 map_2017 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2017") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2017 <- map_2017[!(map_2017$state == ""),]
 map_2017 <- map_2017[!is.na(map_2017$state),]
 #Plot
 p_2017 <- plot_usmap(data = as.data.frame(map_2017), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
-  theme(legend.position="none") + ggtitle("2017")
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2017")
 
 
 #Create data for 2018 
 map_2018 <- media %>% 
   group_by(state_abb) %>% 
   filter (year == "2018") %>% 
-  summarize(num_title = n()) %>%
+  summarise(num_title = n()) %>%
   rename(state = state_abb)
 #Format the data
 map_2018 <- map_2018[!(map_2018$state == ""),]
 map_2018 <- map_2018[!is.na(map_2018$state),]
 #Plot
 p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") + 
-  scale_fill_gradientn(limits = c(0,700), colours=c("yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"), name = "# of Stories") +
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
   guides(fill = guide_colorbar(ncol = 1)) + 
-  theme(legend.position=c(1.2,2.1)) + ggtitle("2018")
+  theme(legend.position="right") + ggtitle("2018")
 
 #Plot all
 grid.arrange(p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018, ncol = 2, nrow = 4)
@@ -247,27 +250,27 @@ Next, we looked across all the relevant media sources (national and state-wide c
 #Top 10 media outlets with articles on suicide
 top_media <- media %>% 
   group_by(media_name) %>%
-  summarize(total = n())%>%
+  summarise(total = n())%>%
   arrange(desc(total))
 
 p_top_media <- ggplot(data = subset(top_media, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
   geom_bar(stat = "identity") + 
   coord_flip() + 
   xlab("Media Outlet Name") + ylab("Number of Articles") + 
-  ggtitle("Top 10: Media Outlets with Articles on Suicide (2011-2018)")
+  ggtitle("Top 10: Media Outlets with Articles on Suicide (2011-2018)") + theme_bw()
 print(p_top_media)
 
 #Top 10 media outlets with suicide in the article title
 top_suicide <- media %>%
   group_by(media_name) %>% 
-  summarize(total = sum(suicide_title)) %>%
+  summarise(total = sum(suicide_title)) %>%
   arrange(desc(total))
 
 p_top_suicide <- ggplot(data = subset(top_suicide, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
   geom_bar(stat = "identity") + 
   coord_flip() + 
   xlab("Media Outlet Name") + ylab("Number of Articles") + 
-  ggtitle("Top 10: Media Outlets with 'Suicid' in the Article Titles (2011-2018)")
+  ggtitle("Top 10: Media Outlets with 'Suicid' in the Article Titles (2011-2018)") + theme_bw()
 print(p_top_suicide)
 ```
 
@@ -292,7 +295,7 @@ cdc_join <- cdc_join %>%
 media_join <- media %>% mutate(year = as.factor(year)) %>%
   group_by(year, state_abb) %>%
   filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
-  summarize(articles = length(title))
+  summarise(articles = length(title))
 media_join <- media_join[!(media_join$state_abb == ""),]
 media_join <- media_join[!is.na(media_join$state_abb),]
 
@@ -314,11 +317,13 @@ combined_plot <- function(x) {
   geom_line(aes(y = articles/2, group = 1, colour = "Number of Articles"), size = 0.75) +
   geom_point(aes(y = articles/2, group = 1, colour = "Number of Articles"), shape = 18, size = 3) +
   scale_y_continuous(sec.axis = sec_axis(~.*2, name = "Number of Articles on Suicide")) +
-  xlab("Year") + ylab("Suicide Death Rate per million people") + ggtitle(paste(ifelse(x == "DC", "District of Columbia", state.name[match(x, state.abb)]))) + theme(legend.title = element_blank())}
+  xlab("Year") + ylab("Suicide Death Rate per million people") + ggtitle(paste(ifelse(x == "DC", "District of Columbia", state.name[match(x, state.abb)]))) + theme(legend.title = element_blank())} + theme_bw()
   
 #Example: Can be used for any state using the state abbreviation
 combined_plot("IL")
 combined_plot("CA")
 ```
 
-###EXPLAIN
+
+
+
