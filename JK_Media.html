@@ -283,7 +283,7 @@ print(p2)</code></pre>
 <h3>USMAP PLOTS</h3>
 <p>Probing further into the data, we looked at the time trend of suicide-related articles published specifically in each state. Some news articles do not have a record of the publishing state, likely because the media source has national coverage, and there were excluded from this analysis. Overall, we see an obvious increase in the number of published suicide-related articles, across all the states. California (increase by 564) and Wisconsin (increase by 529) show the largest increase in count of articles over 8 years, followed by Ohio (308), Massachusetts (291), New York (284) and Floride (279). The spike in published articles from late 2016 through 2018 across the United States, as indicated in the count plot, appears to be applicable individually to most states for that time period.</p>
 <p>Note: There is missing data for media coverage of suicide in some states for the earlier years.</p>
-<pre class="r"><code>###`usmap` plots
+<pre class="r"><code>###`usmap` plots for media coverage time trends
 #Create data for 2011 
 map_2011 &lt;- media %&gt;% 
   group_by(state_abb) %&gt;% 

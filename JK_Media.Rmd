@@ -108,7 +108,7 @@ Probing further into the data, we looked at the time trend of suicide-related ar
 Note: There is missing data for media coverage of suicide in some states for the earlier years. 
 
 ```{r, fig.height = 10, fig.width = 12}
-###`usmap` plots
+###`usmap` plots for media coverage time trends
 #Create data for 2011 
 map_2011 <- media %>% 
   group_by(state_abb) %>% 
