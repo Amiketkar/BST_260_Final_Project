@@ -1,0 +1,291 @@
+---
+title: "cdc analysis"
+author: "Xinye Qiu"
+date: "12/14/2018"
+output: html_document
+---
+
+###cleaning data
+```{r, eval=FALSE, echo=FALSE}
+#load necessary packages
+library(dplyr) 
+#read in raw downloaded data and check basic summary characteristics
+rm(list=ls())
+getwd()
+setwd('/Users/qiuxinye/Desktop/BST260/bst260 final project')
+cdc=read.csv('cdc_statesuicide_1999_2016.csv', stringsAsFactors=TRUE)
+names(cdc)
+summary(cdc)
+#assign RACE abbreviation
+cdc$RACE[cdc$race=='White']='EA'
+cdc$RACE[cdc$race=='Black or African American']='AA'
+cdc$RACE[cdc$race=='American Indian or Alaska Native']='AI'
+cdc$RACE[cdc$race=='Asian or Pacific Islander']='AP'
+summary(cdc$RACE)
+cdc$RACE=as.factor(cdc$RACE)
+#one digit death (already one digit)
+#excluding unreliable suicide rate
+cdc_new=subset(cdc, crude_rate!='Unreliable')
+summary(cdc_new)
+cdc_new$crude_rate=as.numeric(cdc_new$crude_rate) #per 100,000 person
+#separate percentage total death to have soly number (percentage_total_death_num in %)
+class(cdc_new$percentage_total_death)
+summary(cdc_new$percentage_total_death)
+cdc_new$percentage_total_death=as.character(cdc_new$percentage_total_death)
+cdc_new$percentage_total_death_num=substr(cdc_new$percentage_total_death,1,4)
+cdc_new$percentage_total_death_num=as.numeric(cdc_new$percentage_total_death_num)
+summary(cdc_new$percentage_total_death_num)
+#extract unique state name and assign state_abb
+usn=unique(cdc_new$state) 
+usn
+statename=function(DATA){
+  DATA$state_abb[DATA$state=='Alabama']='AL'
+  DATA$state_abb[DATA$state=='Alaska']='AK' 
+  DATA$state_abb[DATA$state=='Arizona']='AZ' 
+  DATA$state_abb[DATA$state=='Arkansas']='AR'
+  DATA$state_abb[DATA$state=='California']='CA' 
+  DATA$state_abb[DATA$state=='Colorado']='CO' 
+  DATA$state_abb[DATA$state=='Connecticut']='CT' 
+  DATA$state_abb[DATA$state=='Delaware']='DE' 
+  DATA$state_abb[DATA$state=='District of Columbia']='DC'
+  DATA$state_abb[DATA$state=='Florida']='FL' 
+  
+  DATA$state_abb[DATA$state=='Georgia']='GA'
+  DATA$state_abb[DATA$state=='Hawaii']='HI' 
+  DATA$state_abb[DATA$state=='Idaho']='ID' 
+  DATA$state_abb[DATA$state=='Illinois']='IL'
+  DATA$state_abb[DATA$state=='Indiana']='IN' 
+  DATA$state_abb[DATA$state=='Iowa']='IA' 
+  DATA$state_abb[DATA$state=='Kansas']='KS' 
+  DATA$state_abb[DATA$state=='Kentucky']='KY' 
+  DATA$state_abb[DATA$state=='Louisiana']='LA'
+  DATA$state_abb[DATA$state=='Maine']='ME'
+  
+  DATA$state_abb[DATA$state=='Maryland']='MD'
+  DATA$state_abb[DATA$state=='Massachusetts']='MA' 
+  DATA$state_abb[DATA$state=='Michigan']='MI' 
+  DATA$state_abb[DATA$state=='Minnesota']='MN'
+  DATA$state_abb[DATA$state=='Mississippi']='MS' 
+  DATA$state_abb[DATA$state=='Missouri']='MO' 
+  DATA$state_abb[DATA$state=='Montana']='MT' 
+  DATA$state_abb[DATA$state=='Nebraska']='NE' 
+  DATA$state_abb[DATA$state=='Nevada']='NV'
+  DATA$state_abb[DATA$state=='New Hampshire']='NH'
+  
+  DATA$state_abb[DATA$state=='New Jersey']='NJ'
+  DATA$state_abb[DATA$state=='New Mexico']='NM' 
+  DATA$state_abb[DATA$state=='New York']='NY' 
+  DATA$state_abb[DATA$state=='North Carolina']='NC'
+  DATA$state_abb[DATA$state=='North Dakota']='ND' 
+  DATA$state_abb[DATA$state=='Ohio']='OH' 
+  DATA$state_abb[DATA$state=='Oklahoma']='OK' 
+  DATA$state_abb[DATA$state=='Oregon']='OR' 
+  DATA$state_abb[DATA$state=='Pennsylvania']='PA'
+  DATA$state_abb[DATA$state=='Rhode Island']='RI'
+  
+  DATA$state_abb[DATA$state=='South Carolina']='SC'
+  DATA$state_abb[DATA$state=='South Dakota']='SD' 
+  DATA$state_abb[DATA$state=='Tennessee']='TN' 
+  DATA$state_abb[DATA$state=='Texas']='TX' 
+  DATA$state_abb[DATA$state=='Utah']='UT' 
+  DATA$state_abb[DATA$state=='Vermont']='VT'
+  DATA$state_abb[DATA$state=='Virginia']='VA'
+  DATA$state_abb[DATA$state=='Washington']='WA'
+  DATA$state_abb[DATA$state=='West Virginia']='WV' 
+  DATA$state_abb[DATA$state=='Wisconsin']='WI' 
+  
+  DATA$state_abb[DATA$state=='Wyoming']='WY'
+  return(DATA)
+}
+statename(cdc_new)
+#transform state_abb into factor
+cdc_new$state_abb=as.factor(cdc_new$state_abb)
+summary(cdc_new$state_abb)
+#have a new cleaned copy
+names(cdc_new)
+new_cdc=cdc_new %>% select(year, state, state_abb, gender, race, RACE, death, 
+                           population, crude_rate, crude_rate_se, percentage_total_death_num)
+summary(new_cdc)
+write.csv(new_cdc, 'new_cdc.csv')
+gc()
+```
+
+###read in cleaned cdc data
+```{r, echo=FALSE}
+rm(list=ls())
+gc()
+getwd()
+setwd("/Users/qiuxinye/Desktop/BST260/BST_260_Final_Project/final project")
+cdc=read.csv('new_cdc.csv')
+summary(cdc)
+```
+
+###Line plot or time series plot to show the national time trend from 1999-2016
+```{r}
+#load packages
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(ggrepel)
+#create subset and have national average for each year
+cdc_national=cdc %>% group_by(year) %>% mutate(national_rate=mean(crude_rate)) %>% arrange(year)
+cdc_national=cdc_national %>% select('year','national_rate')
+cdc_national=distinct(cdc_national)
+#line plots with points and texts
+p=cdc_national %>% 
+  ggplot(aes(x=year, y=national_rate))+
+  geom_line(stat='identity',size=1)+
+  geom_point(size=4)+
+  geom_text_repel(aes(label=round(national_rate, digits=0)), nudge_x=0.50, nudge_y=1.0, size=3)+
+  xlab('Year')+
+  ylab('National Suicide Rate (Counts/100,000 population)')+
+  ggtitle('US National Suicide Rate Change with Year')+
+  theme_economist()+
+  scale_x_continuous(breaks=seq(1999,2016,by=1))+
+  theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave('national_trend.pdf')
+```
+
+A: From the national trend plot, we could see that the US nationwide suicide rate increased a lot from 192 counts per 100,000 population at 1999 to 236 counts per population at 2010, flucturated around 230 counts per 100,000 population during year 2010 to 2015 and dropped sharply at 2016. This indicated that recent years, the US society is experiencing a severe increasing suicide problem. And we further hypothesized that there could be an effect on the suicide rate across the nation induced by increaseing media coverage after 2015. 
+
+###Contrasting race stratified Female-Male suicide rate bar plot for year 2011-2016
+```{r}
+#load packages
+library(XML)
+library(reshape2)
+library(ggplot2)
+library(plyr)
+library(dplyr)
+#restricting to recent years 2011-2016 and present average
+cdc_subpop=cdc %>% filter(year %in% c('2011','2012','2013','2014','2015','2016'))
+cdc_subpop=cdc_subpop %>% 
+  group_by(year,gender,RACE) %>% 
+  mutate(national_rate=mean(crude_rate)) %>% 
+  arrange(year,gender,RACE)
+cdc_subpop=cdc_subpop %>% select('year','gender','RACE','national_rate')
+cdc_subpop=distinct(cdc_subpop)
+#pyramid plots from year 2011 to 2016
+p=ggplot(data = cdc_subpop, 
+       mapping = aes(x = RACE, fill = gender, 
+                     y = ifelse(test = gender == "Male", 
+                                yes = -national_rate, no = national_rate))) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = abs, limits = max(cdc_subpop$national_rate) * c(-1,1)) +
+  labs(y = "Population")+
+  facet_wrap(~year)+
+  coord_flip()+
+  theme_bw()+
+  ylab('National Suicide Count per #100,000')+
+  xlab('Race Ethnicity')+
+  theme(plot.title = element_text(size=16, face="bold"),
+        axis.title.x = element_text(size=12, face="bold"), 
+        axis.title.y = element_text(size=12, face="bold"))+
+  ggtitle('Race-Gender Grouped US National Suicide Rate')+
+  theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave('race_gender.pdf')
+```
+
+A: In order see the sub-population variation in the national suicide rate, we plotted the above race-gender grouped bar plots. The plot showed that, in general, more males committed suicide compared to females and difference races have different suicide rate for each year. It is kind of hard to tell which race experienced the most suicide cases among all races but we could at least conclude that for each year, in general, european Americans (whites) experienced fewer suicide cases than other races. 
+
+###Maps with 51 states showing their own recent years suicide rate for year 2011 to 2016
+```{r}
+#load packages
+library(dplyr)
+library(usmap)
+library(ggplot2)
+#restricting to recent years 2011-2016 for each year and present average rate on the map
+#2011
+cdc_state2011=cdc %>% filter(year %in% c('2011'))
+cdc_state2011=cdc_state2011 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2011=cdc_state2011 %>% select('year','state','state_abb','state_rate')
+cdc_state2011=distinct(cdc_state2011)
+p1=plot_usmap(data = cdc_state2011, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2011')
+ggsave('2011_map.pdf')
+print(p1)
+
+#2012
+cdc_state2012=cdc %>% filter(year %in% c('2012'))
+cdc_state2012=cdc_state2012 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2012=cdc_state2012 %>% select('year','state','state_abb','state_rate')
+cdc_state2012=distinct(cdc_state2012)
+p2=plot_usmap(data = cdc_state2012, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2012')
+ggsave('2012_map.pdf')
+print(p2)
+
+#2013
+cdc_state2013=cdc %>% filter(year %in% c('2013'))
+cdc_state2013=cdc_state2013 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2013=cdc_state2013 %>% select('year','state','state_abb','state_rate')
+cdc_state2013=distinct(cdc_state2013)
+p3=plot_usmap(data = cdc_state2013, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2013')
+ggsave('2013_map.pdf')
+print(p3)
+
+#2014
+cdc_state2014=cdc %>% filter(year %in% c('2014'))
+cdc_state2014=cdc_state2014 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2014=cdc_state2014 %>% select('year','state','state_abb','state_rate')
+cdc_state2014=distinct(cdc_state2014)
+p4=plot_usmap(data = cdc_state2014, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2014')
+ggsave('2014_map.pdf')
+print(p4)
+
+#2015
+cdc_state2015=cdc %>% filter(year %in% c('2015'))
+cdc_state2015=cdc_state2015 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2015=cdc_state2015 %>% select('year','state','state_abb','state_rate')
+cdc_state2015=distinct(cdc_state2015)
+p5=plot_usmap(data = cdc_state2015, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2015')
+ggsave('2015_map.pdf')
+print(p5)
+
+#2016
+cdc_state2016=cdc %>% filter(year %in% c('2016'))
+cdc_state2016=cdc_state2016 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2016=cdc_state2016 %>% select('year','state','state_abb','state_rate')
+cdc_state2016=distinct(cdc_state2016)
+p6=plot_usmap(data = cdc_state2016, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2016')
+ggsave('2016_map.pdf')
+print(p6)
+```
+
+A: With the purpose of better examing the spatial difference of suicide rate across different US states, we constructed 6 US maps showing the suicide rate in each state for each year ranging from 2011 to 2016 and compared to the media coverage in that year. We could see that the suicide distribution changed greatly from 2011 to 2016.    
+1. In 2011, Western states and south-eastern states experiened the most cases of suicide among all the states while the middle and northern part is much better.    
+2. In 2012, the suicide incidence center shifted a little bit to north-western part with obvious decreasing cases in California and some of the south-eastern states.    
+3. In 2013, southern part of US experienced more cases per 100,000 population than others.  
+4. The suicide rate across states is overall higher in 2014 than other in other years.  
+5. In 2015, many of the states had decreasing suicide rate compared to the previous year and western and eastern parts of US experienced more cases per 100,000 population than the middle part.  
+6. In 2016, we could still examined a decreasing trend of the suicide rate for most of the states and it seemed to us that more cases per 100,000 population happened in the northern part.  
+What is worth noting is that Alaka is always among the highest rated state with high suicide rate among all the states of US from 2011 to 2014, which might be due to the extreme cold climate and short-sunshine period there.  
