@@ -28,6 +28,7 @@ library(grid)
 library(dslabs)
 library(ggrepel)
 library(ggthemes)
+library(Hmisc)
 ```
 
 ##MOTIVATION
