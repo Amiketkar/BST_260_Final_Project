@@ -6,17 +6,17 @@ output: html_document
 ---
 
 ###MOTIVATION
-With increase in rates of suicides, media attention for this issue has increased over the years. A review by Stack, S [1]. combing the evidence from a total of 293 findings from 42 studies on the impact of publicized suicide stories in the media on actual suicde rate in the world showed that based on logistic regression analysis, the effect of either an entertainment or political celebrity suicide story were 14.3 times more likely to find a copycat effect than studies that did not. And a review of recent events in Austria and Switzerland indicates that suicide prevention organizations can successfully convince the media to change the frequency and content of their suicide coverage in an effort to reduce copycat effects. 
+With increase in rates of suicides, media attention for this issue has increased over the years. A review by Stack, S [1]. combing the evidence from a total of 293 findings from 42 studies on the impact of publicized suicide stories in the media on actual suicde rate in the world, showed that, based on logistic regression analysis, the effect of either an entertainment or political celebrity suicide story were 14.3 times more likely to find a copycat effect than studies that did not. And a review of recent events in Austria and Switzerland indicates that suicide prevention organizations can successfully convince the media to change the frequency and content of their suicide coverage in an effort to reduce copycat effects. 
 
 Therefore, we are interested in analyzing and tracking how changes in media coverage of suicide and suicide-related topics over time impact actual suicide rates in the United States. In order to do this, we use suicide data from the CDC and media data from MediaCloud to analyze trends and **these questions** though data visualization as well as correlation check and linear regression.
 
 ###RESEARCH QUESTION
-In general, we are trying to answer the following research question: **How media coverage on suicide affects the actual suicide rate across the US states?**  
+**How media coverage on suicide affects the actual suicide rate across the US states?**  
 
 ###DATA SOURCE
-The actual suicde rate epidemiology data was requested throught the US CDC wonder database [2]. We only used ICD-10 X60-X84 to refer to direct intentional self-harm. Y87.0 is unclarified death after previous suicide intentions. We restricted our search to the following criteria: 1) All US states, 2) All genders, 3) All races, 4) 1999-2016. The cdc data, 'cdc', contains information on year, state, gender, race, death, population, crude rate in the form of counts per 100,000 population, crude rate se and percentages of total death (%).   
+The actual suicide rate epidemiology data was requested throught the US CDC wonder database [2]. We only used ICD-10 X60-X84 to refer to direct intentional self-harm. Y87.0 is unclarified death after previous suicide intentions. We restricted our search to the following criteria: 1) All US states, 2) All genders, 3) All races, 4) 1999-2016. The cdc data, 'cdc', contains information on year, state, gender, race, death, population, crude rate in the form of counts per 100,000 population, crude rate se and percentages of total death (%).   
 
-We obtained data on the media coverage of suicide-related topics in the United States from Media Cloud [3], an open-source platform for analysing media ecosystems and tracking how stories and ideas spread through media. We used the 'Explorer' tool to aggregate news stories for the following Boolean query: (((Suicid* OR suicid*) AND (Commit* OR commit*) AND (“mental” AND “health”)) AND ( United States OR United States of America  OR America ))NOT (Bomb* OR bomb* OR dead* OR death* OR Dead* OR Death* ). Since we have AND logic in the Mental Health and Suicide, we might have limited our articles to be speaking about both suicide and Mental health. We did this because we wanted to avoid noise in the data with articles speaking only about mental health and not suicide. We restricted our search to obtain news stories fitting our query from January 1, 2011, to October 31, 2018, from the following media sources: 1) United States - National, 2) United States - State and Local. The first media dataset, 'media', contains information on the title of the news article, publishing date, publishing state, language, type of media, name of the media source, theme of the article, and whether it was Associated Press syndicated. The second media dataset, 'media2', includes information on the publication date, the count of relevant stories published pertaining to our suicide-related query, the total number of articles published on that date by the selected news sources, and the ratio of suicide-related stories to total stories on that date.     
+We obtained data on the media coverage of suicide-related topics in the United States from Media Cloud [3], an open-source platform for analysing media ecosystems and tracking how stories and ideas spread through media. We used the 'Explorer' tool to aggregate news stories for the following Boolean query: (((Suicid* OR suicid*) AND (Commit* OR commit*) AND (“mental” AND “health”)) AND ( United States OR United States of America  OR America ))NOT (Bomb* OR bomb* OR dead* OR death* OR Dead* OR Death* ). Since we have AND logic in the Mental Health and Suicide, we might have limited our articles to be speaking about both suicide and mental health. We did this because we wanted to avoid noise in the data with articles speaking only about mental health and not suicide. We restricted our search to obtain news stories fitting our query from January 1, 2011, to October 31, 2018, from the following media sources: 1) United States - National, 2) United States - State and Local. The first media dataset, 'media', contains information on the title of the news article, publishing date, publishing state, language, type of media, name of the media source, theme of the article, and whether it was Associated Press syndicated. The second media dataset, 'media2', includes information on the publication date, the count of relevant stories published pertaining to our suicide-related query, the total number of articles published on that date by the selected news sources, and the ratio of suicide-related stories to total stories on that date.     
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -62,8 +62,9 @@ library(datasets)
 
 ###EXPLORATORY ANALYSIS
 ####FOR THE CDC DATA
-####CLEANING THE CDC DATA
 ```{r, eval=FALSE, echo=FALSE}
+
+####CLEANING THE CDC DATA
 #read in raw downloaded data and check basic summary characteristics
 rm(list=ls())
 cdc=read.csv('cdc_statesuicide_1999_2016.csv', stringsAsFactors=TRUE)
@@ -176,7 +177,7 @@ summary(cdc)
 
 
 ####TIME SERIES PLOT TO SHOW THE NATIONAL TIME TREND FROM 1999-2016  
-We explored our cdc data first by making a time series plot that could show tha national time trend of the suicde rate to see if there is any temporal pattern of the actual suicide rate. From the national trend plot, we could see that the US nationwide suicide rate increased a lot from 192 counts per 100,000 population at 1999 to 236 counts per population at 2010, flucturated around 230 counts per 100,000 population during year 2010 to 2015 and dropped sharply at 2016. This indicated that recent years, the US society is experiencing a severe increasing suicide problem. And we further hypothesized that there could be an effect on the suicide rate across the nation induced by increaseing media coverage after 2015.     
+We explored our CDC data first by making a time series plot that could show the national time trend of the suicide rate to see if there is any temporal pattern of the actual suicide rate. From the national trend plot, we could see that the US nationwide suicide rate increased a lot from 192 counts per 100,000 population at 1999 to 236 counts per population at 2010, fluctuated around 230 counts per 100,000 population during year 2010 to 2015 and dropped sharply at 2016. This indicated that in recent years, the US society is experiencing a severe increasing suicide problem. We further hypothesized that there could be an effect on the suicide rate across the nation induced by increaseing media coverage after 2015.     
 
 ```{r}
 #create subset and have national average for each year
@@ -238,8 +239,9 @@ ggsave('race_gender.pdf')
 
 
 ####FOR THE MEDIA DATA
+
+```{r, echo=FALSE, warning=FALSE}
 ####CLEANING THE MEDIA DATA
-```{r, echo=FALSE}
 #Read the media data
 media <- read.csv("suicid-or-suicid-and-sampled-stories-20181213194457.csv")
 media2 <- read.csv("suicid-or-suicid-and-stories-over-time-20181213191601.csv")
@@ -261,7 +263,7 @@ media <- media %>% mutate(suicide_title = ifelse(str_detect(title, "suicid") | s
 
 
 ####COUNT PLOTS
-For our exploratory analysis of the media data, we looked at the count of national, state and local articles about or with references to suicide, published on each day from January 1, 2011, to October 31, 2018. Our analysis indicates that there has been an overall increasing trend in the number of suicide-related articles published in United States each day, with a significant spike towards the end of 2016, that continued to increase through 2018. This surge could be attributed to increasing awareness and willingness to talk about mental health and suicide, heavy coverage of celebrity suicides (Kate Spade, Anthony Bourdain, Chester Bennington, among others), and also possibly due to a general increase in number of suicides that warrant increases media coverage. However, after adjusted for the total articles published by computing the ratio plot (Ratio of Suicide = Related Suicide Articles to All Articles Published on Each Day), we came to realize that the ratio of the suicide articles actually did not change too much along with the years. 
+For our exploratory analysis of the media data, we looked at the count of national, state and local articles about or with references to suicide, published on each day from January 1, 2011, to October 31, 2018. Our analysis indicates that there has been an overall increasing trend in the number of suicide-related articles published in United States each day, with a significant spike towards the end of 2016, that continued to increase through 2018. This surge could be attributed to increasing awareness and willingness to talk about mental health and suicide, heavy coverage of celebrity suicides (Kate Spade, Anthony Bourdain, Chester Bennington, among others), and also possibly due to a general increase in number of suicides that warrant increased media coverage. However, after adjusting for the total articles published by computing the ratio plot (Ratio of Suicide = Related Suicide Articles to All Articles Published on Each Day), we came to realize that the ratio of the suicide articles actually did not change too much along with the years. 
 
 ```{r}
 ###COUNT AND RATIO PLOTS
@@ -282,7 +284,7 @@ p2 <- media2 %>%
  geom_line(colour = "darkorchid4") +
  scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) +
  xlab("Year") + ylab("Ratio") + ggtitle("Ratio of Suicide-Related Articles to All Articles Published on Each Day")+   theme_bw()+ 
-  theme(plot.title = element_text(size=14, face="bold", hjust=0.5),
+  theme(plot.title = element_text(size=13, face="bold", hjust=0.5),
         axis.title.x = element_text(size=12, face="bold"), 
         axis.title.y = element_text(size=12, face="bold"))
 print(p2)
@@ -290,7 +292,7 @@ print(p2)
 
 
 ####TOP10 MEDIA OUTLETS REPORTING ON SUICIDE  
-Next, we looked across all the relevant media sources (national and state-wide coverage) in our dataset to find the media outlets that report the most on suicide. Daily Mail, Huffington Post and The Guardian US are the top 3 outlets with the most number of articles of suicide-related topics. We were also interested in seeing which outlets most use the term 'suicid' or 'Suicid' in the article titles (suicide OR suicides OR suicidal OR Suicide OR Suicides OR Suicidal), because titles serve as the initial attraction to read an article, and often, readers simply browse through the headlines without reading the entire article. We found that `r round(mean(media$suicide)*100, digits = 2)`% of all the articles on suicide in our dataset had titles containing the term 'suicid' or 'Suicid'. Daily Mail articles utilized the term the most from all the outlets, and far more than any of the other outlets. Huffington Post and Washington Post followed Daily Mail, but used the term significantly less frequently that Daily Mail. Clearly, Daily Mail not only has the most articles on suicide-related topics, but also has the most headlines including the word between 2011 and 2018. To investigate the impact of this would, data on Daily Mail's readerbase, media types (paper, digital, etc.) and geographic reach could be collected and further analyzed.  
+Next, we looked across all the relevant media sources (national and state-wide coverage) in our dataset to find the media outlets that report the most on suicide. Daily Mail, Huffington Post and The Guardian US are the top 3 outlets with the most number of articles of suicide-related topics. We were also interested in seeing which outlets most use the term 'suicid' or 'Suicid' in the article titles (suicide OR suicides OR suicidal OR Suicide OR Suicides OR Suicidal), because titles serve as the initial attraction to read an article, and often, readers simply browse through the headlines without reading the entire article. We found that `r round(mean(media$suicide)*100, digits = 2)`% of all the articles on suicide in our dataset had titles containing the term 'suicid' or 'Suicid'. Daily Mail articles utilized the term the most from all the outlets, and far more than any of the other outlets. Huffington Post and Washington Post followed Daily Mail, but appear to use the term significantly less frequently that Daily Mail. Clearly, Daily Mail not only has the most articles on suicide-related topics, but also has the most headlines including the word between 2011 and 2018. To investigate the impact of this would, data on Daily Mail's readerbase, media types (paper, digital, etc.) and geographic reach could be collected and further analyzed.  
 
 ```{r}
 #Top 10 media outlets with articles on suicide
@@ -303,8 +305,9 @@ p_top_media <- ggplot(data = subset(top_media, total %in% total[1:10]), aes(medi
   geom_bar(stat = "identity") + 
   coord_flip() + 
   xlab("Media Outlet Name") + ylab("Number of Articles") + 
-  ggtitle("Top 10: Media Outlets with Articles on Suicide (2011-2018)")+ 
-  theme(plot.title = element_text(size=14, face="bold", hjust=0.5),
+  ggtitle("Top 10: Media Outlets with Articles on Suicide (2011-2018)")+
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold", hjust=0.5),
         axis.title.x = element_text(size=12, face="bold"), 
         axis.title.y = element_text(size=12, face="bold"))
 print(p_top_media)
@@ -319,8 +322,9 @@ p_top_suicide <- ggplot(data = subset(top_suicide, total %in% total[1:10]), aes(
   geom_bar(stat = "identity") + 
   coord_flip() + 
   xlab("Media Outlet Name") + ylab("Number of Articles") + 
-  ggtitle("Top 10: Media Outlets with 'Suicid' in the Article Titles (2011-2018)")+ 
-  theme(plot.title = element_text(size=13, face="bold", hjust=0.5),
+  ggtitle("Top 10: Media Outlets with 'Suicid' in the Headlines (2011-2018)")+ 
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold", hjust=0.5),
         axis.title.x = element_text(size=12, face="bold"), 
         axis.title.y = element_text(size=12, face="bold"))
 print(p_top_suicide)
@@ -358,7 +362,7 @@ With the purpose of better examing the spatial difference of suicide rate across
 4）The suicide rate across states is overall higher in 2014 than other in other years.  
 5）In 2015, many of the states had decreasing suicide rate compared to the previous year and western and eastern parts of US experienced more cases per 100,000 population than the middle part.  
 6）In 2016, we could still examined a decreasing trend of the suicide rate for most of the states and it seemed to us that more cases per 100,000 population happened in the northern part.  
-What is worth noting is that Alaka is always among the highest rated state with high suicide rate among all the states of US from 2011 to 2014, which might be due to the extreme cold climate and short-sunshine period there.  
+What is worth noting is that Alaska is always among the highest rated state with high suicide rate among all the states of US from 2011 to 2014, which might be due to the extreme cold climate and short-sunshine period there.  
 
 ```{r}
 #restricting to recent years 2011-2016 for each year and present average rate on the map
@@ -449,7 +453,7 @@ print(p6)
 
 
 ####US MEDIA MAPS (YEAR 2011 TO 2018)
-Probing further into the data, we looked at the time trend of suicide-related articles published specifically in each state. Some news articles do not have a record of the publishing state, likely because the media source has national coverage, and there were excluded from this analysis. Overall, we see an obvious increase in the number of published suicide-related articles, across all the states. California (increase by 564) and Wisconsin (increase by 529) show the largest increase in count of articles over 8 years, followed by Ohio (308), Massachusetts (291), New York (284) and Floride (279). The spike in published articles from late 2016 through 2018 across the United States, as indicated in the count plot, appears to be applicable individually to most states for that time period. Note: There is missing data for media coverage of suicide in some states for the earlier years. 
+Probing further into the data, we looked at the time trend of suicide-related articles published specifically in each state. Some news articles do not have a record of the publishing state, likely because the media source has national coverage, and they were excluded from this analysis. Overall, we see an obvious increase in the number of published suicide-related articles, across all the states. California (increase by 564) and Wisconsin (increase by 529) show the largest increase in count of articles over 8 years, followed by Ohio (308), Massachusetts (291), New York (284) and Florida (279). The spike in published articles from late 2016 through 2018 across the United States, as indicated in the count plot, appears to be applicable individually to most states for that time period. Note: There is missing data for media coverage of suicide in some states for the earlier years. 
 
 ```{r, fig.height = 10, fig.width = 12}
 #Create data for 2011 
@@ -606,7 +610,7 @@ full <- full_join(cdc_join, media_join)
 
 
 ####COMPARE SUICIDE RATE/100,000 PEOPLE AND MEDIA COVERAGE OF SUICIDE IN EACH STATE
-We could compare the trend of suicide rate and number of articles reported at the same time for each state. Below is showing the case for California and Illinois, the plots indicated that even thought California has experienced obvious ups and downs concerning the media reports, the suicide rate has not changed too much during years 2011 to 2016. However, for Illinois, as number of articles increased, the state suicide rate tended to decrease after 2014. Further information for all of the states could be seen in our group website. We could see that media coverage actually has different influence on different states. 
+We could compare the trend of suicide rate and number of articles reported at the same time for each state. Below is showing the case for California and Illinois, the plots indicated that even thought California has experienced obvious ups and downs concerning the media reports, the suicide rate has not changed too much during years 2011 to 2016. However, for Illinois, as number of articles increased, the state suicide rate tended to decrease after 2014. Further information for all of the states could be seen on our group website, or by using the function 'combined_plot() in this markdown file'. We could see that media coverage actually has different influence in different states. 
 
 ```{r}
 ###Make plots of suicide death rate and number of articles over time for each state 
@@ -630,9 +634,9 @@ combined_plot("CA")
 
 ####CORRELATION OF MEDIA COVERAGE AND SUICIDE RATE 
 ####DISTRIBUTION AND TRANSFORMATION
-Before building our regression model, we first looked at the distribution of suicide rate and number of articles published, we can see that the they were skewed to the right. We hence transformed that variable by log transformation (base 10) to attain approximately better normal distribution for both of the variables. Please see the distributions below.
+Before building our regression model, we first looked at the distribution of suicide rate and number of articles published, we can see that both distributions were skewed to the right. We log transformed (base 10) both variables to attain approximately  normal distributions. Please see the distributions below.
 
-```{r}
+```{r, warning= FALSE}
  p<- full %>% filter(!(is.na(articles))) %>% 
   ggplot()+
   geom_histogram(aes(articles), color="black",binwidth = 13)+
@@ -664,11 +668,9 @@ grid.arrange(p,p1,q,q1, ncol=2)
 
 
 ####BUILDING CORRELATION TREND PLOTS
-Based on log-transformed suicide rate and article numbers, we calculated the Spearman Correlation coefficient for correlation between suicide rate per million and number of articles published for years 2011 to 2016 separately and then plotted the Correlation coeffient over the years. We can see from the plot that the correlation becomes increasingly negative with years and supports our hypothesis that there is a reducing (statistically negative) effect of media coverage on suicide incidence. 
+Based on log-transformed suicide rate and article numbers, we calculated the Spearman Correlation coefficient for correlation between suicide rate per million and number of articles published for years 2011 to 2016 separately and then plotted the correlation coeffient over the years. We can see from the plot that the correlation becomes increasingly negative with years and supports our hypothesis that there is a reducing (statistically negative) effect of media coverage on suicide incidence. 
 
-```{r}
-str(full)
-dim(full)
+```{r, warning=FALSE}
 full_s <- spread(full, key=year, value=state_abb)
 full_11 <- full_s %>% filter(!(is.na(full_s$`2011`)))
 c11<-cor.test(full_11$log_articles, full_11$log_rate,method= "spearman")
@@ -697,9 +699,9 @@ corrplot
 
 
 ####REGRESSION
-To assess this association even further we did linear regression between the suicide rate and number of articles published from 2011 to 2016 and found they were statistically significantly associated. However, there might be confounding by multiple factors like year of publiscation, state in which the news is published etc. 
+To assess this association even further, we performed linear regression between the suicide rate and number of articles published from 2011 to 2016 and found they were statistically significantly associated. However, there might be confounding by multiple factors like year of publication, state in which the news is published, type of media, celebrity status, etc. 
 
-```{r}
+```{r, warning=FALSE}
 #glm gaussian model
 m1 <-  glm(log_rate~log_articles, data= full, family= gaussian)
 tidy((m1))
@@ -717,9 +719,9 @@ full %>% filter(!(is.na(articles))) %>%
 
 When adding year and state as covariates in the model, we add additional complexity and our data is limited in its sample size. Ideally, we would have liked to do this analysis by exploring non linear regession methods as residual plot shows dicernible pattern suggesting the asscoaition may not be linear. In summary, based on the univariate model, we examined a significantly negative effect of media coverage on actual suicide rate on a national scale for year 2011 to 2016. On average, the log(suicide rate (#/100,000 population)) is expected to decrease by 0.077 for every one unit increase in log(#articles) (p<0.001). 
 
-In addition, based on the refined model, there is actually no significant association between number of articles and actual suicide rate (p=0.381) after adjusting for year and state and this might be highely due to the fact that the relation between media and suicide is not linear and the model is misspecifed. Better model could be tried in the future if we have more information on other potential counfounders, such as weather, psychological factors as well as social economic indicators. 
+In addition, based on the refined model, there is actually no significant association between number of articles and actual suicide rate (p=0.381) after adjusting for year and state, and this might be highly due to the fact that the relation between media and suicide is not linear and the model is misspecified. A better model could be built in the future if we have more information on other potential counfounders, such as weather, psychological factors as well as social economic indicators. 
 
-```{r}
+```{r, warning= FALSE }
 full_reg <- full[ ,c(1,2,7,8)]
 m2 <- glm(log_rate~log_articles+factor(year)+factor(state_abb), data= full_reg)
 tidy((m2))
@@ -730,7 +732,7 @@ plot(m2)
 ###STUDY FINDINGS
 Suicide distribution in the real world changed greatly from 2011 to 2016. Our national trend plot for the actual suicide rate indicated that in recent years, the US society is experiencing a severe increasing suicide problem. Mississippi, Montana, Alaska and Alabama are four states with the highest suicide rate among all the states from 2011 to 2016. At the same time, there is an obvious increase in the number of published suicide-related articles, across all the states, with a spike from late 2016 through 2018.  
 
-Based on the media-suicide rate combined evidence analysis, we examined an increasingly negative correlation between media and suicide rate from 2011 to 2016, which supports our hypothesis that there is an effect of media coverage on reducing suicide incidence. Based on the univariate regression model, we examined a significantly negative effect of media coverage on actual suicide rate on the national scale for year 2011 to 2016. On average, the log(suicide rate (#/100,000 population)) is expected to decrease by 0.077 for every one unit increase in log(#articles) (p<0.001). After adjusting for year and state, the signal disappeared, which could possibly be explained by the fact that media coverage actually has different influence on different states and different years.  
+Based on the media-suicide rate combined evidence analysis, we examined an increasingly negative correlation between media and suicide rate from 2011 to 2016, which supports our hypothesis that there is an effect of media coverage on reducing suicide incidence. Based on the univariate regression model, we examined a significantly negative effect of media coverage on actual suicide rate on the national scale for year 2011 to 2016. On average, the log(suicide rate (#/100,000 population)) is expected to decrease by 0.077 for every one unit increase in log(#articles) (p<0.001). After adjusting for year and state, the signal disappeared, which could possibly be explained by the fact that media coverage actually has different influence on different states and in different years.  
 
 Ideally, we would also like to explore the effect of different media types on reducing the suicide rate, however, we have many missing values on media type and after we merged the data, we cannot draw any solid conclusion based on the limited number of pieces of information on media types. 
 
