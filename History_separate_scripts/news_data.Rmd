@@ -1,0 +1,148 @@
+---
+title: "News_data"
+author: "Amita Ketkar"
+date: "12/13/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# install.packages("dplyr")
+# install.packages("tidyverse")
+# install.packages("ggplot2")
+# install.packages("Himsc")
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(Hmisc)
+library(ggthemes)
+library(ggrepel)
+library(Hmisc)
+library(corrplot)
+library(broom)
+```
+
+##
+```{r}
+###CDC###
+#'rate_pmil' is the crude rate per million people i.e. the number of deaths per state population per 1 million people
+cdc_data <- read.csv("new_cdc.csv")
+cdc_join <- cdc_data %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state) %>%
+  summarise(deaths = sum(death), populations = sum(population), rate_pmil = (deaths/populations)*1000000)
+cdc_join <- cdc_join %>% 
+  mutate(state_abb = ifelse(state == "District of Columbia", "DC", state.abb[match(state, state.name)])) %>%
+  filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
+  select(year, state_abb, deaths, populations, rate_pmil) 
+
+media_join <- media %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state_abb) %>%
+  filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
+  dplyr::summarize(articles = length(title))
+media_join <- media_join[!(media_join$state_abb == ""),]
+media_join <- media_join[!is.na(media_join$state_abb),]
+
+#Join CDC and Media data for years 2011-2016
+full <- full_join(cdc_join, media_join)
+```
+## Correlation of media coverage and suicide rate per million
+When see the distribution of suicide rate per million and number of articles published we can see that the it is skewed to the right. We hence transformed that variable by log transformation (base 10) to attain approximately normal distribution for both of the variables. 
+See the distributions below.
+```{r}
+ p<- full %>% filter(!(is.na(articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(articles), color="black",binwidth = 13)+
+  xlab("Number of articles")+
+  ggtitle("Distribution of number of articles")+
+  theme_bw()
+
+full<- full %>% mutate(log_articles = log10(articles))
+p1<- full %>% filter(!(is.na(log_articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(log_articles),color="black", binwidth = 0.1)+
+  xlab("Log transformed number of articles")+
+  ggtitle("Distribution of number of articles")+
+  theme_bw()
+
+q<- full %>% filter(!(is.na(articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(rate_pmil),color="black", binwidth= 13)+
+  xlab("Suicide rate per million")+
+  ggtitle("Distribution of suicide rate per million")+
+  theme_bw()
+
+full <- full %>% mutate(log_rate = log10(rate_pmil))
+
+q1<- full %>% filter(!(is.na(articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(log_rate),color="black", binwidth= 0.05)+
+  xlab("Log transformed suicide rate per million")+
+  ggtitle("Distribution of suicide rate per million")+
+  theme_bw()
+
+grid.arrange(p,p1,q,q1, ncol=2)
+
+```
+## For build correlation plot
+We have calculated the Spearman Correlation coefficient for correlation between suicide rate per million and numbe of articles published  for years 2011 to 2016 separately and then plotted the Correlation coeffient over the years. We can see from the plot that the correlation becomes increasingly negative with years and supports our hypothesis that there me association between the media coverage and suicide rates.
+```{r}
+str(full)
+dim(full)
+
+full_s <- spread(full, key=year, value=state_abb)
+full_11 <- full_s %>% filter(!(is.na(full_s$`2011`)))
+c11<-cor.test(full_11$log_articles, full_11$log_rate,method= "spearman")
+full_12 <- full_s %>% filter(!(is.na(full_s$`2012`)))
+full_13 <- full_s %>% filter(!(is.na(full_s$`2013`)))
+full_14 <- full_s %>% filter(!(is.na(full_s$`2014`)))
+full_15 <- full_s %>% filter(!(is.na(full_s$`2015`)))
+full_16 <- full_s %>% filter(!(is.na(full_s$`2016`)))
+
+c12<- cor.test(full_12$log_articles, full_12$log_rate,method= "spearman")
+c13<- cor.test(full_13$log_articles, full_13$log_rate,method= "spearman")
+c14<-cor.test(full_14$log_articles, full_14$log_rate,method= "spearman")
+c15<- cor.test(full_15$log_articles, full_15$log_rate,method= "spearman")
+c16<-cor.test(full_16$log_articles, full_16$log_rate,method= "spearman")
+
+correlations <- (c(c11$estimate,c12$estimate,c13$estimate,c14$estimate,c15$estimate,c16$estimate))
+year <- c(2011,2012,2013,2014,2015,2016)
+corrplot <- ggplot()+
+  geom_point(aes(x=year,y=correlations),size=4)+
+  geom_line(aes(x=year,y=correlations),size = 1) +
+  xlab('Year')+
+  ylab("Spearman correlation coefficient(rho)")+
+  ggtitle("Trend in the correlation between Suicide rate and Media coverage")+
+  theme_economist()+
+  theme(plot.title = element_text(hjust = 0.5))
+corrplot
+
+  
+```
+## Regression
+
+To assess this association even further we did linear regression between the suicide rate and number of articles published and found they were statistically significantly associated. However, there might be confounding by multiple factors like year of publiscation , state in which the news is published etc.
+```{r}
+#regression
+m1 <-  glm(log_rate~log_articles, data= full, family= gaussian)
+tidy((m1))
+
+
+full %>% filter(!(is.na(articles))) %>%
+  ggplot()+
+  geom_point(aes(log_articles,log_rate))+
+  geom_smooth(aes(log_articles,log_rate, method="lm"))+
+  xlab('Log transformed number of articles')+
+  ylab("Log transformed rate of suicides")+
+  ggtitle("Association of Suicide rate and number of articles")+
+  theme_economist()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+## Regression with additional variables 
+When adding year and state as covariates in the model, we add additional complexity and our data is limited in its sample size. Ideally, we would have liked to do this analysis by exploring non linear regession methods as residual plot shows dicernible pattern suggesting the asscoaition may not be linear. 
+```{r}
+full_reg <- full[ ,c(1,2,7,8)]
+m2 <-  glm(log_rate~log_articles+factor(year)+factor(state_abb), data= full_reg)
+tidy((m2))
+plot(m2)
+```
+

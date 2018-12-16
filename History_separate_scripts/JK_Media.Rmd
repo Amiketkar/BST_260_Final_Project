@@ -1,0 +1,323 @@
+---
+---
+title: "JK"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+##INSTALL PACKAGES
+```{r}
+#install.packages("openintro")
+```
+
+
+##LOAD PACKAGES
+```{r}
+library(plyr)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(lubridate)
+library(openintro)
+library(usmap)
+library(gridExtra)
+library(grid)
+library(dslabs)
+library(ggrepel)
+library(ggthemes)
+library(Hmisc)
+```
+
+##MOTIVATION
+We are interested in analyzing and tracking how changes in media coverage of suicide and suicide-related topics over time impact actual suicide rates in the United States. In order to do this, we use suicide data from the CDC and media data from MediaCloud to analyze trends and **these questions** though data visualization **AND??**
+
+
+##PART 1: OBTAIN AND CLEAN THE MEDIA DATA FROM MEDIACLOUD 
+
+We obtained data on the media coverage of suicide-related topics in the United States from Media Cloud, an open-source platform for analysing media ecosystems and tracking how stories and ideas spread through media. We used the 'Explorer' tool to aggregate news stories for the following Boolean query:
+
+(((Suicid* OR suicid*) AND (Commit* OR commit*) AND (“mental” AND “health”)) AND ( United States OR United States of America  OR America ))NOT (Bomb* OR bomb* OR dead* OR death* OR Dead* OR Death* )
+
+We restricted our search to obtain news stories fitting our query from January 1, 2011, to October 31, 2018, from the following media sources:
+
+United States - National
+United States - State and Local
+
+The first media dataset, 'media', contains information on the title of the news article, publishing date, publishing state, language, type of media, name of the media source, theme of the article, and whether it was Associated Press syndicated. 
+
+The second media dataset includes information on the publication date, the count of relevant stories published pertaining to our suicide-related query, the total number of articles published on that date by the selected news sources, and the ratio of suicide-related stories to total stories on that date.
+
+```{r}
+### CLEANING THE MEDIA DATA
+#Read the media data
+media <- read.csv("suicid-or-suicid-and-sampled-stories-20181213194457.csv")
+media2 <- read.csv("suicid-or-suicid-and-stories-over-time-20181213191601.csv")
+
+#Extract the year information from the publication date
+media <- media %>% mutate(date = ymd_hms(publish_date))
+media <- media %>% separate(date, c("date", "hour_min"), " ")
+media <- media %>% mutate(year = year(date), month = month(date), day = day(date))
+media <- media %>% filter(language == "en")
+
+#Separate the publication state (state, year) into 2 separate variables: state and country
+media <- media %>% separate(media_pub_state, c("state", "country"), ",")
+
+#Create a variable with state abbreviations from the state name
+media <- media %>% mutate(state_abb = ifelse(nchar(state)>2, state.abb[match(state, state.name)], state))
+
+#Find titles that include the term 'suicid' and create a new variable "suicide_title"" that returns 1 if "suicid" is present, else 0
+media <- media %>% mutate(suicide_title = ifelse(str_detect(title, "suicid") | str_detect(title, "Suicid"), 1, 0))
+```
+
+
+##PART2: EXPLORATORY ANALYSIS
+###COUNT PLOTS
+For our exploratory analysis of the media data, we looked at the count of national, state and local articles about or with references to suicide, published on each day from January 1, 2011, to October 31, 2018. Our analysis indicates that there has been an overall increasing trend in the number of suicide-related articles published in United States each day, with a significant spike towards the end of 2016, that continued to increase through 2018. This surge could be attributed to increasing awareness and willingness to talk about mental health and suicide, heavy coverage of celebrity suicides (Kate Spade, Anthony Bourdain, Chester Bennington, among others), and also possibly due to a general increase in number of suicides that warrant increases media coverage.  
+
+**Do we want to keep the ratio plot?**
+
+```{r}
+###COUNT AND RATIO PLOTS
+#Count plot
+p1 <- media2 %>% 
+  ggplot(aes(date, count, group = 1)) + 
+  geom_line(colour = "darkorchid4") + 
+  scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) + 
+  xlab("Year") + ylab("Count") + ggtitle("Suicide-Related Articles Published on Each Day") + theme_bw()
+
+print(p1)
+  
+#Ratio plot
+p2 <- media2 %>% 
+  ggplot(aes(date, ratio, group = 1)) + 
+  geom_line(colour = "darkorchid4") + 
+  scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) + 
+  xlab("Year") + ylab("Ratio") + ggtitle("Ratio of Suicide-Related Articles to All Articles Published on Each Day") + theme_bw()
+  
+print(p2)
+```
+
+
+###USMAP PLOTS 
+
+Probing further into the data, we looked at the time trend of suicide-related articles published specifically in each state. Some news articles do not have a record of the publishing state, likely because the media source has national coverage, and there were excluded from this analysis. Overall, we see an obvious increase in the number of published suicide-related articles, across all the states. California (increase by 564) and Wisconsin (increase by 529) show the largest increase in count of articles over 8 years, followed by Ohio (308), Massachusetts (291), New York (284) and Floride (279). The spike in published articles from late 2016 through 2018 across the United States, as indicated in the count plot, appears to be applicable individually to most states for that time period. 
+
+Note: There is missing data for media coverage of suicide in some states for the earlier years. 
+
+```{r, fig.height = 10, fig.width = 12}
+###`usmap` plots for media coverage time trends
+#Create data for 2011 
+map_2011 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2011") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2011 <- plot_usmap(data = as.data.frame(map_2011), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2011")
+
+#"yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"
+
+#Create data for 2012 
+map_2012 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2012") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2012 <- plot_usmap(data = as.data.frame(map_2012), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2012")
+
+
+#Create data for 2013 
+map_2013 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2013") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2013 <- plot_usmap(data = as.data.frame(map_2013), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2013")
+
+
+#Create data for 2014 
+map_2014 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2014") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2014 <- plot_usmap(data = as.data.frame(map_2014), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2014")
+
+
+#Create data for 2015 
+map_2015 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2015") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2015 <- plot_usmap(data = as.data.frame(map_2015), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2015")
+
+
+#Create data for 2016 
+map_2016 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2016") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2016 <- plot_usmap(data = as.data.frame(map_2016), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories")  +
+  theme(legend.position="right") + ggtitle("2016")
+
+
+#Create data for 2017 
+map_2017 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2017") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2017 <- plot_usmap(data = as.data.frame(map_2017), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2017")
+
+
+#Create data for 2018 
+map_2018 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2018") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb) %>%
+  filter(state != "") %>% 
+  filter(!is.na(state))
+#Plot
+p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  guides(fill = guide_colorbar(ncol = 1)) + 
+  theme(legend.position="right") + ggtitle("2018")
+
+#Plot all
+grid.arrange(p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018, ncol = 2, nrow = 4)
+```
+
+```{r}
+###FIND STATES WITH THE LARGEST DIFFERENCE BETWEEN 2011 AND 2018
+diff <- full_join(map_2011, map_2018, by = "state") 
+diff <- diff %>% mutate(difference = num_title.y - num_title.x)
+diff <- diff %>% arrange(desc(difference)) %>% select(state, difference)
+top_n(diff,10)
+```
+
+
+###TOP10 MEDIA OUTLETS REPORTING ON SUICIDE
+
+Next, we looked across all the relevant media sources (national and state-wide coverage) in our dataset to find the media outlets that report the most on suicide. Daily Mail, Huffington Post and The Guardian US are the top 3 outlets with the most number of articles of suicide-related topics. We were also interested in seeing which outlets most use the term 'suicid' or 'Suicid' in the article titles (suicide OR suicides OR suicidal OR Suicide OR Suicides OR Suicidal), because titles serve as the initial attraction to read an article, and often, readers simply browse through the headlines without reading the entire article. We found that `r round(mean(media$suicide)*100, digits = 2)`% of all the articles on suicide in our dataset had titles containing the term 'suicid' or 'Suicid'. Daily Mail articles utilized the term the most from all the outlets, and far more than any of the other outlets. Huffington Post and Washington Post followed Daily Mail, but used the term significantly less frequently that Daily Mail. Clearly, Daily Mail not only has the most articles on suicide-related topics, but also has the most headlines including the word between 2011 and 2018. To investigate the impact of this would, data on Daily Mail's readerbase, media types (paper, digital, etc.) and geographic reach could be collected and further analyzed.
+
+
+```{r}
+###PLOT OF TOP MEDIA OUTLETS REPORTING ON SUICIDE
+#Top 10 media outlets with articles on suicide
+top_media <- media %>% 
+  group_by(media_name) %>%
+  summarise(total = n())%>%
+  arrange(desc(total))
+
+p_top_media <- ggplot(data = subset(top_media, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  xlab("Media Outlet Name") + ylab("Number of Articles") + 
+  ggtitle("Top 10: Media Outlets with Articles on Suicide (2011-2018)") + theme_bw()
+print(p_top_media)
+
+#Top 10 media outlets with suicide in the article title
+top_suicide <- media %>%
+  group_by(media_name) %>% 
+  summarise(total = sum(suicide_title)) %>%
+  arrange(desc(total))
+
+p_top_suicide <- ggplot(data = subset(top_suicide, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  xlab("Media Outlet Name") + ylab("Number of Articles") + 
+  ggtitle("Top 10: Media Outlets with 'Suicid' in the Article Titles (2011-2018)") + theme_bw()
+print(p_top_suicide)
+```
+
+
+##PART3: COMBINED ANALYSIS
+
+In order to compare the time-trend of suicide death rate to the time-trend of media reporting on suicide-related topics, we combined the CDC suicide data with the media data. The combined data includes the year, state, suicide rate (deaths per 1 million people), and number of articles published in that state. We made further comparisons individually for each state.
+
+```{r}
+###COMBINE CDC AND MEDIA DATA
+#In the CDC data, create 'rate_pmil' which is the crude rate per million people i.e. the number of deaths per state population per 1 million people
+cdc_data <- read.csv("new_cdc.csv")
+cdc_join <- cdc_data %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state) %>%
+  summarise(deaths = sum(death), populations = sum(population), rate_pmil = (deaths/populations)*1000000)
+cdc_join <- cdc_join %>% 
+  mutate(state_abb = ifelse(state == "District of Columbia", "DC", state.abb[match(state, state.name)])) %>%
+  filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
+  select(year, state_abb, deaths, populations, rate_pmil) 
+
+#Prepare media data for joining
+media_join <- media %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state_abb) %>%
+  filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
+  summarise(articles = length(title))
+media_join <- media_join[!(media_join$state_abb == ""),]
+media_join <- media_join[!is.na(media_join$state_abb),]
+
+#Join CDC and media data for years 2011-2016
+full <- full_join(cdc_join, media_join)
+```
+
+
+###COMPARE SUICIDE RATE/MILLION PEOPLE AND MEDIA COVERAGE OF SUICIDE IN EACH STATE
+```{r}
+###Make plots of suicide death rate and number of articles over time for each state 
+#Make plots as a function of the state abbreviation
+combined_plot <- function(x) {
+  full %>% 
+  filter(state_abb == x) %>% 
+  ggplot(aes(x = year)) + 
+  geom_line(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate"), size = 0.75) + 
+  geom_point(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate"), size = 2) +
+  geom_line(aes(y = articles/2, group = 1, colour = "Number of Articles"), size = 0.75) +
+  geom_point(aes(y = articles/2, group = 1, colour = "Number of Articles"), shape = 18, size = 3) +
+  scale_y_continuous(sec.axis = sec_axis(~.*2, name = "Number of Articles on Suicide")) +
+  xlab("Year") + ylab("Suicide Death Rate per million people") + ggtitle(paste(ifelse(x == "DC", "District of Columbia", state.name[match(x, state.abb)]))) + theme(legend.title = element_blank())} + theme_bw()
+  
+#Example: Can be used for any state using the state abbreviation
+combined_plot("IL")
+combined_plot("CA")
+```
+
+
+

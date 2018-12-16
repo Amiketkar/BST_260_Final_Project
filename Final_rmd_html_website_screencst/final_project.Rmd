@@ -1,0 +1,742 @@
+---
+title: "Effect of Media Reports on Suicide Rate in the US"
+author: Amita Ketkar, Jui Kothari, Xinye Qiu, Yiwen Zhang (In alphabetic order)
+date: 2018-12-15
+output: html_document
+---
+####QUICK LINK TO OUR WEBSITE:(https://bst260-final-media-suicide.shinyapps.io/shinyapp/)
+###MOTIVATION
+With increase in rates of suicides, media attention for this issue has increased over the years. A review by Stack, S [1]. combing the evidence from a total of 293 findings from 42 studies on the impact of publicized suicide stories in the media on actual suicde rate in the world, showed that, based on logistic regression analysis, the effect of either an entertainment or political celebrity suicide story were 14.3 times more likely to find a copycat effect than studies that did not. And a review of recent events in Austria and Switzerland indicates that suicide prevention organizations can successfully convince the media to change the frequency and content of their suicide coverage in an effort to reduce copycat effects. 
+
+Therefore, we are interested in analyzing and tracking how changes in media coverage of suicide and suicide-related topics over time impact actual suicide rates in the United States. In order to do this, we use suicide data from the CDC and media data from MediaCloud to analyze trends and **these questions** though data visualization as well as correlation check and linear regression.
+
+###RESEARCH QUESTION
+**How does media coverage on suicide affect the actual suicide rate across the US states?**  
+
+###DATA SOURCE
+The actual suicide rate epidemiology data was requested throught the US CDC wonder database [2]. We only used ICD-10 X60-X84 to refer to direct intentional self-harm. Y87.0 is unclarified death after previous suicide intentions. We restricted our search to the following criteria: 1) All US states, 2) All genders, 3) All races, 4) 1999-2016. The cdc data, 'cdc', contains information on year, state, gender, race, death, population, crude rate in the form of counts per 100,000 population, crude rate se and percentages of total death (%).   
+
+We obtained data on the media coverage of suicide-related topics in the United States from Media Cloud [3], an open-source platform for analysing media ecosystems and tracking how stories and ideas spread through media. We used the 'Explorer' tool to aggregate news stories for the following Boolean query: (((Suicid* OR suicid*) AND (Commit* OR commit*) AND (“mental” AND “health”)) AND ( United States OR United States of America  OR America ))NOT (Bomb* OR bomb* OR dead* OR death* OR Dead* OR Death* ). Since we have AND logic in the Mental Health and Suicide, we might have limited our articles to be speaking about both suicide and mental health. We did this because we wanted to avoid noise in the data with articles speaking only about mental health and not suicide. We restricted our search to obtain news stories fitting our query from January 1, 2011, to October 31, 2018, from the following media sources: 1) United States - National, 2) United States - State and Local. The first media dataset, 'media', contains information on the title of the news article, publishing date, publishing state, language, type of media, name of the media source, theme of the article, and whether it was Associated Press syndicated. The second media dataset, 'media2', includes information on the publication date, the count of relevant stories published pertaining to our suicide-related query, the total number of articles published on that date by the selected news sources, and the ratio of suicide-related stories to total stories on that date.     
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, include=FALSE}
+####INSTALL PACKAGES
+#install.packages("openintro")
+#install.packages("usmap")
+#install.packages("ggthemes")
+#install.packages("ggrepel")
+#install.packages("gridExtra")
+#install.packages("dplyr")
+#install.packages("tidyverse")
+#install.packages("ggplot2")
+#install.packages("Himsc")
+#...etc
+```
+
+```{r, include=FALSE}
+####LOAD PACKAGES
+#please detach all the packges first in your rstudio and load packages in the following order
+#there is an issue with plyr suppression by ggplot2 and dplyr
+library(plyr)
+library(ggplot2)
+library(ggthemes)
+library(ggrepel)
+library(XML)
+library(reshape2)
+library(tidyverse)
+library(lubridate)
+library(openintro)
+library(usmap)
+library(gridExtra)
+library(grid)
+library(dslabs)
+library(Hmisc)
+library(corrplot)
+library(broom)
+library(dplyr)
+library(datasets)
+```
+
+###EXPLORATORY ANALYSIS
+####FOR THE CDC DATA
+```{r, eval=FALSE, echo=FALSE}
+
+####CLEANING THE CDC DATA
+#read in raw downloaded data and check basic summary characteristics
+rm(list=ls())
+cdc=read.csv('cdc_statesuicide_1999_2016.csv', stringsAsFactors=TRUE)
+names(cdc)
+summary(cdc)
+
+#assign RACE abbreviation
+cdc$RACE[cdc$race=='White']='EA'
+cdc$RACE[cdc$race=='Black or African American']='AA'
+cdc$RACE[cdc$race=='American Indian or Alaska Native']='AI'
+cdc$RACE[cdc$race=='Asian or Pacific Islander']='AP'
+summary(cdc$RACE)
+cdc$RACE=as.factor(cdc$RACE)
+
+#one digit death (already one digit)
+#excluding unreliable suicide rate
+cdc_new=subset(cdc, crude_rate!='Unreliable')
+summary(cdc_new)
+cdc_new$crude_rate=as.numeric(cdc_new$crude_rate) #per 100,000 person
+
+#separate percentage total death to have soly number (percentage_total_death_num in %)
+class(cdc_new$percentage_total_death)
+summary(cdc_new$percentage_total_death)
+cdc_new$percentage_total_death=as.character(cdc_new$percentage_total_death)
+cdc_new$percentage_total_death_num=substr(cdc_new$percentage_total_death,1,4)
+cdc_new$percentage_total_death_num=as.numeric(cdc_new$percentage_total_death_num)
+summary(cdc_new$percentage_total_death_num)
+
+#extract unique state name and assign state_abb
+usn=unique(cdc_new$state) 
+usn
+statename=function(DATA){
+  DATA$state_abb[DATA$state=='Alabama']='AL'
+  DATA$state_abb[DATA$state=='Alaska']='AK' 
+  DATA$state_abb[DATA$state=='Arizona']='AZ' 
+  DATA$state_abb[DATA$state=='Arkansas']='AR'
+  DATA$state_abb[DATA$state=='California']='CA' 
+  DATA$state_abb[DATA$state=='Colorado']='CO' 
+  DATA$state_abb[DATA$state=='Connecticut']='CT' 
+  DATA$state_abb[DATA$state=='Delaware']='DE' 
+  DATA$state_abb[DATA$state=='District of Columbia']='DC'
+  DATA$state_abb[DATA$state=='Florida']='FL' 
+  
+  DATA$state_abb[DATA$state=='Georgia']='GA'
+  DATA$state_abb[DATA$state=='Hawaii']='HI' 
+  DATA$state_abb[DATA$state=='Idaho']='ID' 
+  DATA$state_abb[DATA$state=='Illinois']='IL'
+  DATA$state_abb[DATA$state=='Indiana']='IN' 
+  DATA$state_abb[DATA$state=='Iowa']='IA' 
+  DATA$state_abb[DATA$state=='Kansas']='KS' 
+  DATA$state_abb[DATA$state=='Kentucky']='KY' 
+  DATA$state_abb[DATA$state=='Louisiana']='LA'
+  DATA$state_abb[DATA$state=='Maine']='ME'
+  
+  DATA$state_abb[DATA$state=='Maryland']='MD'
+  DATA$state_abb[DATA$state=='Massachusetts']='MA' 
+  DATA$state_abb[DATA$state=='Michigan']='MI' 
+  DATA$state_abb[DATA$state=='Minnesota']='MN'
+  DATA$state_abb[DATA$state=='Mississippi']='MS' 
+  DATA$state_abb[DATA$state=='Missouri']='MO' 
+  DATA$state_abb[DATA$state=='Montana']='MT' 
+  DATA$state_abb[DATA$state=='Nebraska']='NE' 
+  DATA$state_abb[DATA$state=='Nevada']='NV'
+  DATA$state_abb[DATA$state=='New Hampshire']='NH'
+  
+  DATA$state_abb[DATA$state=='New Jersey']='NJ'
+  DATA$state_abb[DATA$state=='New Mexico']='NM' 
+  DATA$state_abb[DATA$state=='New York']='NY' 
+  DATA$state_abb[DATA$state=='North Carolina']='NC'
+  DATA$state_abb[DATA$state=='North Dakota']='ND' 
+  DATA$state_abb[DATA$state=='Ohio']='OH' 
+  DATA$state_abb[DATA$state=='Oklahoma']='OK' 
+  DATA$state_abb[DATA$state=='Oregon']='OR' 
+  DATA$state_abb[DATA$state=='Pennsylvania']='PA'
+  DATA$state_abb[DATA$state=='Rhode Island']='RI'
+  
+  DATA$state_abb[DATA$state=='South Carolina']='SC'
+  DATA$state_abb[DATA$state=='South Dakota']='SD' 
+  DATA$state_abb[DATA$state=='Tennessee']='TN' 
+  DATA$state_abb[DATA$state=='Texas']='TX' 
+  DATA$state_abb[DATA$state=='Utah']='UT' 
+  DATA$state_abb[DATA$state=='Vermont']='VT'
+  DATA$state_abb[DATA$state=='Virginia']='VA'
+  DATA$state_abb[DATA$state=='Washington']='WA'
+  DATA$state_abb[DATA$state=='West Virginia']='WV' 
+  DATA$state_abb[DATA$state=='Wisconsin']='WI' 
+  
+  DATA$state_abb[DATA$state=='Wyoming']='WY'
+  return(DATA)
+}
+statename(cdc_new)
+
+#transform state_abb into factor
+cdc_new$state_abb=as.factor(cdc_new$state_abb)
+summary(cdc_new$state_abb)
+
+#have a new cleaned copy
+names(cdc_new)
+new_cdc=cdc_new %>% select(year, state, state_abb, gender, race, RACE, death, 
+                           population, crude_rate, crude_rate_se, percentage_total_death_num)
+summary(new_cdc)
+write.csv(new_cdc, 'new_cdc.csv')
+```
+
+####READ IN DATA
+```{r, include=FALSE}
+cdc=read.csv('new_cdc.csv')
+summary(cdc)
+```
+
+
+####TIME SERIES PLOT TO SHOW THE NATIONAL TIME TREND FROM 1999-2016  
+We explored our CDC data first by making a time series plot that could show the national time trend of the suicide rate to see if there is any temporal pattern of the actual suicide rate. From the national trend plot, we could see that the US nationwide suicide rate increased a lot from 192 counts per 100,000 population at 1999 to 236 counts per population at 2010, fluctuated around 230 counts per 100,000 population during year 2010 to 2015 and dropped sharply at 2016. This indicated that in recent years, the US society is experiencing a severe increasing suicide problem. We further hypothesized that there could be an effect on the suicide rate across the nation induced by increaseing media coverage after 2015.     
+
+```{r}
+#create subset and have national average for each year
+cdc_national=cdc %>% group_by(year) %>% mutate(national_rate=mean(crude_rate)) %>% arrange(year)
+cdc_national=cdc_national %>% select('year','national_rate')
+cdc_national=distinct(cdc_national)
+
+#line plots with points and texts
+p=cdc_national %>% 
+  ggplot(aes(x=year, y=national_rate))+
+  geom_line(stat='identity',size=1)+
+  geom_point(size=4)+
+  geom_text_repel(aes(label=round(national_rate, digits=0)), nudge_x=0.50, nudge_y=1.0, size=3)+
+  xlab('Year')+
+  ylab('National Suicide Rate (Counts/100,000 population)')+
+  ggtitle('US National Suicide Rate Change with Year')+
+  theme_economist()+
+  scale_x_continuous(breaks=seq(1999,2016,by=1))+
+  theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave('national_trend.pdf')
+```
+
+
+####CONTRASTING RACE STRATIFIED FEMALE-MALE SUICIDE RATE BAR PLOT FOR YEAR 2011-2016
+In order to see the sub-population variation in the national suicide rate, we plotted the above race-gender grouped bar plots. The plot showed that, in general, more males committed suicide compared to females and difference races have different suicide rate for each year. It is kind of hard to tell which race experienced the most suicide cases among all races but we could at least conclude that for each year, in general, European American Males (white men) and African American Females (black women) experienced fewer suicide cases than other races. (EA: European Americans; AA: African American; AP: Asian or Pacific Islander; AI: American Indian or Alaska Native). 
+
+```{r}
+#restricting to recent years 2011-2016 and present average
+cdc_subpop=cdc %>% filter(year %in% c('2011','2012','2013','2014','2015','2016'))
+cdc_subpop=cdc_subpop %>% 
+  group_by(year,gender,RACE) %>% 
+  mutate(national_rate=mean(crude_rate)) %>% 
+  arrange(year,gender,RACE)
+cdc_subpop=cdc_subpop %>% select('year','gender','RACE','national_rate')
+cdc_subpop=distinct(cdc_subpop)
+
+#pyramid plots from year 2011 to 2016
+p=ggplot(data = cdc_subpop, 
+       mapping = aes(x = RACE, fill = gender, 
+                     y = ifelse(test = gender == "Male", 
+                                yes = -national_rate, no = national_rate))) +
+  geom_bar(stat = "identity") +
+  scale_y_continuous(labels = abs, limits = max(cdc_subpop$national_rate) * c(-1,1)) +
+  labs(y = "Population")+
+  facet_wrap(~year)+
+  coord_flip()+
+  theme_bw()+
+  ylab('National Suicide Count per #100,000')+
+  xlab('Race Ethnicity')+
+  theme(plot.title = element_text(size=16, face="bold"),
+        axis.title.x = element_text(size=12, face="bold"), 
+        axis.title.y = element_text(size=12, face="bold"))+
+  ggtitle('Race-Gender Grouped US National Suicide Rate')+
+  theme(plot.title = element_text(hjust = 0.5))
+p
+ggsave('race_gender.pdf')
+```
+
+
+####FOR THE MEDIA DATA
+
+```{r, echo=FALSE, warning=FALSE}
+####CLEANING THE MEDIA DATA
+#Read the media data
+media <- read.csv("suicid-or-suicid-and-sampled-stories-20181213194457.csv")
+media2 <- read.csv("suicid-or-suicid-and-stories-over-time-20181213191601.csv")
+#Extract the year information from the publication date
+media <- media %>% mutate(date = ymd_hms(publish_date))
+media <- media %>% separate(date, c("date", "hour_min"), " ")
+media <- media %>% mutate(year = year(date), month = month(date), day = day(date))
+media <- media %>% filter(language == "en")
+
+#Separate the publication state (state, year) into 2 separate variables: state and country
+media <- media %>% separate(media_pub_state, c("state", "country"), ",")
+
+#Create a variable with state abbreviations from the state name
+media <- media %>% mutate(state_abb = ifelse(nchar(state)>2, state.abb[match(state, state.name)], state))
+
+#Find titles that include the term 'suicid' and create a new variable "suicide_title"" that returns 1 if "suicid" is present, else 0
+media <- media %>% mutate(suicide_title = ifelse(str_detect(title, "suicid") | str_detect(title, "Suicid"), 1, 0))
+```
+
+
+####COUNT PLOTS
+For our exploratory analysis of the media data, we looked at the count of national, state and local articles about or with references to suicide, published on each day from January 1, 2011, to October 31, 2018. Our analysis indicates that there has been an overall increasing trend in the number of suicide-related articles published in United States each day, with a significant spike towards the end of 2016, that continued to increase through 2018. This surge could be attributed to increasing awareness and willingness to talk about mental health and suicide, heavy coverage of celebrity suicides (Kate Spade, Anthony Bourdain, Chester Bennington, among others), and also possibly due to a general increase in number of suicides that warrant increased media coverage. However, after adjusting for the total articles published by computing the ratio plot (Ratio of Suicide = Related Suicide Articles to All Articles Published on Each Day), we came to realize that the ratio of the suicide articles actually did not change too much along with the years. 
+
+```{r}
+###COUNT AND RATIO PLOTS
+#Count plot
+p1 <- media2 %>%
+ ggplot(aes(date, count, group = 1)) +
+ geom_line(colour = "darkorchid4") +
+ scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) +
+ xlab("Year") + ylab("Count") + ggtitle("Suicide-Related Articles Published on Each Day") + theme_bw() +
+  theme(plot.title = element_text(size=16, face="bold", hjust=0.5),
+        axis.title.x = element_text(size=12, face="bold"), 
+        axis.title.y = element_text(size=12, face="bold"))
+print(p1)
+
+#Ratio plot
+p2 <- media2 %>%
+ ggplot(aes(date, ratio, group = 1)) +
+ geom_line(colour = "darkorchid4") +
+ scale_x_discrete(breaks = c("2011-01-01", "2012-01-01", "2013-01-01", "2014-01-01", "2015-01-01", "2016-01-01", "2017-01-01", "2018-01-01"), labels = c("2011", "2012", "2013", "2014", "2015", "2016", "2017", "2018")) +
+ xlab("Year") + ylab("Ratio") + ggtitle("Ratio of Suicide-Related Articles to All Articles Published on Each Day")+   theme_bw()+ 
+  theme(plot.title = element_text(size=13, face="bold", hjust=0.5),
+        axis.title.x = element_text(size=12, face="bold"), 
+        axis.title.y = element_text(size=12, face="bold"))
+print(p2)
+```
+
+
+####TOP10 MEDIA OUTLETS REPORTING ON SUICIDE  
+Next, we looked across all the relevant media sources (national and state-wide coverage) in our dataset to find the media outlets that report the most on suicide. Daily Mail, Huffington Post and The Guardian US are the top 3 outlets with the most number of articles of suicide-related topics. We were also interested in seeing which outlets most use the term 'suicid' or 'Suicid' in the article titles (suicide OR suicides OR suicidal OR Suicide OR Suicides OR Suicidal), because titles serve as the initial attraction to read an article, and often, readers simply browse through the headlines without reading the entire article. We found that `r round(mean(media$suicide)*100, digits = 2)`% of all the articles on suicide in our dataset had titles containing the term 'suicid' or 'Suicid'. Daily Mail articles utilized the term the most from all the outlets, and far more than any of the other outlets. Huffington Post and Washington Post followed Daily Mail, but appear to use the term significantly less frequently that Daily Mail. Clearly, Daily Mail not only has the most articles on suicide-related topics, but also has the most headlines including the word between 2011 and 2018. To investigate the impact of this would, data on Daily Mail's readerbase, media types (paper, digital, etc.) and geographic reach could be collected and further analyzed.  
+
+```{r}
+#Top 10 media outlets with articles on suicide
+top_media <- media %>% 
+  group_by(media_name) %>%
+  summarise(.,total = length(title))%>%
+  arrange(desc(total))
+
+p_top_media <- ggplot(data = subset(top_media, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  xlab("Media Outlet Name") + ylab("Number of Articles") + 
+  ggtitle("Top 10: Media Outlets with Articles on Suicide (2011-2018)")+
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold", hjust=0.5),
+        axis.title.x = element_text(size=12, face="bold"), 
+        axis.title.y = element_text(size=12, face="bold"))
+print(p_top_media)
+
+#Top 10 media outlets with suicide in the article title
+top_suicide <- media %>%
+  group_by(media_name) %>% 
+  summarise(total = sum(suicide_title)) %>%
+  arrange(desc(total))
+
+p_top_suicide <- ggplot(data = subset(top_suicide, total %in% total[1:10]), aes(media_name, total, group = 1)) + 
+  geom_bar(stat = "identity") + 
+  coord_flip() + 
+  xlab("Media Outlet Name") + ylab("Number of Articles") + 
+  ggtitle("Top 10: Media Outlets with 'Suicid' in the Headlines (2011-2018)")+ 
+  theme_bw()+
+  theme(plot.title = element_text(size=12, face="bold", hjust=0.5),
+        axis.title.x = element_text(size=12, face="bold"), 
+        axis.title.y = element_text(size=12, face="bold"))
+print(p_top_suicide)
+```
+
+
+###FINAL ANALYSIS  
+####SUICIDE RATE RANKINGS IN US
+We summairized and listed different states in descending order of the suicide rate for each year with the purpose of finding the highest ranked states. The tables below showed that Mississippi, Montana, Alaska and Alabama are four states with the highest suicide rate among all the states from 2011 to 2016. The top one state for each year is 2011-Mississippi, 2012-Montana, 2013-Arkansas, 2014-Missouri, 2015-Mississippi and 2016-Montana, all with over 300 cases per 100,000 population for that year. 
+
+```{r}
+#the maximum suicide rate in each state
+cdc_state=cdc %>% filter(year %in% c('2011','2012','2013','2014','2015','2016'))
+cdc_state=cdc_state %>% 
+  select('year','state','crude_rate') %>% 
+  group_by(year, state) %>% 
+  mutate(state_rate=mean(crude_rate)) %>% 
+  arrange(year)
+cdc_state=cdc_state[c('year','state','state_rate')]
+cdc_state=distinct(cdc_state)
+cdc_state %>% filter(year=='2011') %>% arrange(desc(state_rate))
+cdc_state %>% filter(year=='2012') %>% arrange(desc(state_rate))
+cdc_state %>% filter(year=='2013') %>% arrange(desc(state_rate))
+cdc_state %>% filter(year=='2014') %>% arrange(desc(state_rate))
+cdc_state %>% filter(year=='2015') %>% arrange(desc(state_rate))
+cdc_state %>% filter(year=='2016') %>% arrange(desc(state_rate))
+```
+
+
+####US SUICIDE MAPS (RECENT YEAR SUICDE RATE ACROSS THE NATION FOR YEAR 2011 TO 2016)  
+With the purpose of better examing the spatial difference of suicide rate across different US states, we constructed 6 US maps showing the suicide rate in each state for each year ranging from 2011 to 2016 and compared to the media coverage in that year. We could see that the suicide distribution changed greatly from 2011 to 2016.   
+1) In 2011, Western states and south-eastern states experiened the most cases of suicide among all the states while the middle and northern part is much better.    
+2) In 2012, the suicide incidence center shifted a little bit to north-western part with obvious decreasing cases in California and some of the south-eastern states.    
+3) In 2013, southern part of US experienced more cases per 100,000 population than others.  
+4）The suicide rate across states is overall higher in 2014 than other in other years.  
+5）In 2015, many of the states had decreasing suicide rate compared to the previous year and western and eastern parts of US experienced more cases per 100,000 population than the middle part.  
+6）In 2016, we could still examined a decreasing trend of the suicide rate for most of the states and it seemed to us that more cases per 100,000 population happened in the northern part.  
+What is worth noting is that Alaska is always among the highest rated state with high suicide rate among all the states of US from 2011 to 2014, which might be due to the extreme cold climate and short-sunshine period there.  
+
+```{r}
+#restricting to recent years 2011-2016 for each year and present average rate on the map
+#2011
+cdc_state2011=cdc %>% filter(year %in% c('2011'))
+cdc_state2011=cdc_state2011 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2011=cdc_state2011 %>% select('year','state','state_abb','state_rate')
+cdc_state2011=distinct(cdc_state2011)
+p1=plot_usmap(data = cdc_state2011, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2011')
+ggsave('2011_map.pdf')
+print(p1)
+
+#2012
+cdc_state2012=cdc %>% filter(year %in% c('2012'))
+cdc_state2012=cdc_state2012 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2012=cdc_state2012 %>% select('year','state','state_abb','state_rate')
+cdc_state2012=distinct(cdc_state2012)
+p2=plot_usmap(data = cdc_state2012, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2012')
+ggsave('2012_map.pdf')
+print(p2)
+
+#2013
+cdc_state2013=cdc %>% filter(year %in% c('2013'))
+cdc_state2013=cdc_state2013 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2013=cdc_state2013 %>% select('year','state','state_abb','state_rate')
+cdc_state2013=distinct(cdc_state2013)
+p3=plot_usmap(data = cdc_state2013, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2013')
+ggsave('2013_map.pdf')
+print(p3)
+
+#2014
+cdc_state2014=cdc %>% filter(year %in% c('2014'))
+cdc_state2014=cdc_state2014 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2014=cdc_state2014 %>% select('year','state','state_abb','state_rate')
+cdc_state2014=distinct(cdc_state2014)
+p4=plot_usmap(data = cdc_state2014, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2014')
+ggsave('2014_map.pdf')
+print(p4)
+
+#2015
+cdc_state2015=cdc %>% filter(year %in% c('2015'))
+cdc_state2015=cdc_state2015 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2015=cdc_state2015 %>% select('year','state','state_abb','state_rate')
+cdc_state2015=distinct(cdc_state2015)
+p5=plot_usmap(data = cdc_state2015, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2015')
+ggsave('2015_map.pdf')
+print(p5)
+
+#2016
+cdc_state2016=cdc %>% filter(year %in% c('2016'))
+cdc_state2016=cdc_state2016 %>% 
+  group_by(state) %>% 
+  mutate(state_rate=mean(crude_rate))
+cdc_state2016=cdc_state2016 %>% select('year','state','state_abb','state_rate')
+cdc_state2016=distinct(cdc_state2016)
+p6=plot_usmap(data = cdc_state2016, values = "state_rate", lines = "grey") + 
+  scale_fill_continuous(name = "Count per #100,000", low = "white", high = "red")+
+  theme(legend.position = "right", plot.title = element_text(hjust=0.5, size=16, face='bold'))+
+  ggtitle('Averaged Suicide Rate Across US States in 2016')
+ggsave('2016_map.pdf')
+print(p6)
+```
+
+
+####US MEDIA MAPS (YEAR 2011 TO 2018)
+Probing further into the data, we looked at the time trend of suicide-related articles published specifically in each state. Some news articles do not have a record of the publishing state, likely because the media source has national coverage, and they were excluded from this analysis. Overall, we see an obvious increase in the number of published suicide-related articles, across all the states. California (increase by 564) and Wisconsin (increase by 529) show the largest increase in count of articles over 8 years, followed by Ohio (308), Massachusetts (291), New York (284) and Florida (279). The spike in published articles from late 2016 through 2018 across the United States, as indicated in the count plot, appears to be applicable individually to most states for that time period. Note: There is missing data for media coverage of suicide in some states for the earlier years. 
+
+```{r, fig.height = 10, fig.width = 12}
+#Create data for 2011 
+map_2011 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2011") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2011 <- map_2011[!(map_2011$state == ""),]
+map_2011 <- map_2011[!is.na(map_2011$state),]
+#Plot
+p_2011 <- plot_usmap(data = as.data.frame(map_2011), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2011")
+#"yellow", "darkorange1", "red3", "violetred1", "maroon3", "maroon4", "purple4"
+
+#Create data for 2012 
+map_2012 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2012") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2012 <- map_2012[!(map_2012$state == ""),]
+map_2012 <- map_2012[!is.na(map_2012$state),]
+#Plot
+p_2012 <- plot_usmap(data = as.data.frame(map_2012), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2012")
+
+#Create data for 2013 
+map_2013 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2013") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2013 <- map_2013[!(map_2013$state == ""),]
+map_2013 <- map_2013[!is.na(map_2013$state),]
+#Plot
+p_2013 <- plot_usmap(data = as.data.frame(map_2013), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2013")
+
+#Create data for 2014 
+map_2014 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2014") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2014 <- map_2014[!(map_2014$state == ""),]
+map_2014 <- map_2014[!is.na(map_2014$state),]
+#Plot
+p_2014 <- plot_usmap(data = as.data.frame(map_2014), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2014")
+
+#Create data for 2015 
+map_2015 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2015") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2015 <- map_2015[!(map_2015$state == ""),]
+map_2015 <- map_2015[!is.na(map_2015$state),]
+#Plot
+p_2015 <- plot_usmap(data = as.data.frame(map_2015), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2015")
+
+#Create data for 2016 
+map_2016 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2016") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2016 <- map_2016[!(map_2016$state == ""),]
+map_2016 <- map_2016[!is.na(map_2016$state),]
+#Plot
+p_2016 <- plot_usmap(data = as.data.frame(map_2016), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories")  +
+  theme(legend.position="right") + ggtitle("2016")
+
+#Create data for 2017 
+map_2017 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2017") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2017 <- map_2017[!(map_2017$state == ""),]
+map_2017 <- map_2017[!is.na(map_2017$state),]
+#Plot
+p_2017 <- plot_usmap(data = as.data.frame(map_2017), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  theme(legend.position="right") + ggtitle("2017")
+
+#Create data for 2018 
+map_2018 <- media %>% 
+  group_by(state_abb) %>% 
+  filter (year == "2018") %>% 
+  summarise(num_title = n()) %>%
+  rename(state = state_abb)
+#Format the data
+map_2018 <- map_2018[!(map_2018$state == ""),]
+map_2018 <- map_2018[!is.na(map_2018$state),]
+#Plot
+p_2018 <- plot_usmap(data = as.data.frame(map_2018), values = "num_title") + 
+  scale_fill_gradientn(limits = c(0,700), colours=c("white", "red", "red1", "red2", "red3", "red4"), name = "# of Stories") +
+  guides(fill = guide_colorbar(ncol = 1)) + 
+  theme(legend.position="right") + ggtitle("2018")
+
+#Plot all
+grid.arrange(p_2011, p_2012, p_2013, p_2014, p_2015, p_2016, p_2017, p_2018, ncol = 2, nrow = 4)
+
+###FIND STATES WITH THE LARGEST DIFFERENCE BETWEEN 2011 AND 2018
+diff <- full_join(map_2011, map_2018, by = "state") 
+diff <- diff %>% mutate(difference = num_title.y - num_title.x)
+diff <- diff %>% arrange(desc(difference)) %>% select(state, difference)
+top_n(diff,10)
+```
+
+
+####COMBINED ANALYSIS
+In order to compare the time-trend of suicide death rate to the time-trend of media reporting on suicide-related topics, we combined the CDC suicide data with the media data. The combined data includes the year, state, suicide rate (deaths per 1 million people), and number of articles published in that state. We made further comparisons individually for each state.
+
+```{r,warning=FALSE}
+###COMBINE CDC AND MEDIA DATA
+#In the CDC data, create 'rate_pmil' which is the crude rate per million people i.e. the number of deaths per state population per 1 million people
+cdc_data <- read.csv("new_cdc.csv")
+cdc_join <- cdc_data %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state) %>%
+  summarise(deaths = sum(death), populations = sum(population), rate_pmil = (deaths/populations)*1000000)
+cdc_join <- cdc_join %>% 
+  mutate(state_abb = ifelse(state == "District of Columbia", "DC", state.abb[match(state, state.name)])) %>%
+  filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
+  select(year, state_abb, deaths, populations, rate_pmil) 
+
+#Prepare media data for joining
+media_join <- media %>% mutate(year = as.factor(year)) %>%
+  group_by(year, state_abb) %>%
+  filter(year %in% c("2011", "2012", "2013", "2014", "2015", "2016")) %>%
+  summarise(articles = length(title))
+media_join <- media_join[!(media_join$state_abb == ""),]
+media_join <- media_join[!is.na(media_join$state_abb),]
+
+#Join CDC and media data for years 2011-2016
+full <- full_join(cdc_join, media_join)
+```
+
+
+####COMPARE SUICIDE RATE/100,000 PEOPLE AND MEDIA COVERAGE OF SUICIDE IN EACH STATE
+We could compare the trend of suicide rate and number of articles reported at the same time for each state. Below is showing the case for California and Illinois, the plots indicated that even thought California has experienced obvious ups and downs concerning the media reports, the suicide rate has not changed too much during years 2011 to 2016. However, for Illinois, as number of articles increased, the state suicide rate tended to decrease after 2014. Further information for all of the states could be seen on our group website, or by using the function 'combined_plot() in this markdown file'. We could see that media coverage actually has different influence in different states. 
+
+```{r}
+###Make plots of suicide death rate and number of articles over time for each state 
+#Make plots as a function of the state abbreviation
+combined_plot <- function(x) {
+  full %>% 
+  filter(state_abb == x) %>% 
+  ggplot(aes(x = year)) + 
+  geom_line(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate"), size = 0.75) + 
+  geom_point(aes(y = rate_pmil, group = 1, colour = "Sucide Death Rate"), size = 2) +
+  geom_line(aes(y = articles/2, group = 1, colour = "Number of Articles"), size = 0.75) +
+  geom_point(aes(y = articles/2, group = 1, colour = "Number of Articles"), shape = 18, size = 3) +
+  scale_y_continuous(sec.axis = sec_axis(~.*2, name = "Number of Articles on Suicide")) +
+  xlab("Year") + ylab("Suicide Death Rate per million people") + ggtitle(paste(ifelse(x == "DC", "District of Columbia", state.name[match(x, state.abb)]))) + theme(legend.title = element_blank())}
+  
+#Example: Can be used for any state using the state abbreviation
+combined_plot("IL")
+combined_plot("CA")
+```
+
+
+####CORRELATION OF MEDIA COVERAGE AND SUICIDE RATE 
+####DISTRIBUTION AND TRANSFORMATION
+Before building our regression model, we first looked at the distribution of suicide rate and number of articles published, we can see that both distributions were skewed to the right. We log transformed (base 10) both variables to attain approximately  normal distributions. Please see the distributions below.
+
+```{r, warning= FALSE}
+ p<- full %>% filter(!(is.na(articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(articles), color="black",binwidth = 13)+
+  xlab("Number of articles")+
+  ggtitle("Distribution of number of articles")+
+  theme_bw()
+full<- full %>% mutate(log_articles = log10(articles))
+p1<- full %>% filter(!(is.na(log_articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(log_articles),color="black", binwidth = 0.1)+
+  xlab("Log transformed number of articles")+
+  ggtitle("Distribution of number of articles")+
+  theme_bw()
+q<- full %>% filter(!(is.na(articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(rate_pmil),color="black", binwidth= 13)+
+  xlab("Suicide rate per million")+
+  ggtitle("Distribution of suicide rate per million")+
+  theme_bw()
+full <- full %>% mutate(log_rate = log10(rate_pmil))
+q1<- full %>% filter(!(is.na(articles))) %>% 
+  ggplot()+
+  geom_histogram(aes(log_rate),color="black", binwidth= 0.05)+
+  xlab("Log transformed suicide rate per million")+
+  ggtitle("Distribution of suicide rate per million")+
+  theme_bw()
+grid.arrange(p,p1,q,q1, ncol=2)
+```
+
+
+####BUILDING CORRELATION TREND PLOTS
+Based on log-transformed suicide rate and article numbers, we calculated the Spearman Correlation coefficient for correlation between suicide rate per million and number of articles published for years 2011 to 2016 separately and then plotted the correlation coeffient over the years. We can see from the plot that the correlation becomes increasingly negative with years and supports our hypothesis that there is a reducing (statistically negative) effect of media coverage on suicide incidence. 
+
+```{r, warning=FALSE}
+full_s <- spread(full, key=year, value=state_abb)
+full_11 <- full_s %>% filter(!(is.na(full_s$`2011`)))
+c11<-cor.test(full_11$log_articles, full_11$log_rate,method= "spearman")
+full_12 <- full_s %>% filter(!(is.na(full_s$`2012`)))
+full_13 <- full_s %>% filter(!(is.na(full_s$`2013`)))
+full_14 <- full_s %>% filter(!(is.na(full_s$`2014`)))
+full_15 <- full_s %>% filter(!(is.na(full_s$`2015`)))
+full_16 <- full_s %>% filter(!(is.na(full_s$`2016`)))
+c12<- cor.test(full_12$log_articles, full_12$log_rate,method= "spearman")
+c13<- cor.test(full_13$log_articles, full_13$log_rate,method= "spearman")
+c14<-cor.test(full_14$log_articles, full_14$log_rate,method= "spearman")
+c15<- cor.test(full_15$log_articles, full_15$log_rate,method= "spearman")
+c16<-cor.test(full_16$log_articles, full_16$log_rate,method= "spearman")
+correlations <- (c(c11$estimate,c12$estimate,c13$estimate,c14$estimate,c15$estimate,c16$estimate))
+year <- c(2011,2012,2013,2014,2015,2016)
+corrplot <- ggplot()+
+  geom_point(aes(x=year,y=correlations),size=4)+
+  geom_line(aes(x=year,y=correlations),size = 1) +
+  xlab('Year')+
+  ylab("Spearman correlation coefficient(rho)")+
+  ggtitle("Trend in the correlation between Suicide rate and Media coverage")+
+  theme_economist()+
+  theme(plot.title = element_text(hjust = 0.5))
+corrplot
+```
+
+
+####REGRESSION
+To assess this association even further, we performed linear regression between the suicide rate and number of articles published from 2011 to 2016 and found they were statistically significantly associated. However, there might be confounding by multiple factors like year of publication, state in which the news is published, type of media, celebrity status, etc. 
+
+```{r, warning=FALSE}
+#glm gaussian model
+m1 <-  glm(log_rate~log_articles, data= full, family= gaussian)
+tidy((m1))
+#plotting the trend
+full %>% filter(!(is.na(articles))) %>%
+  ggplot()+
+  geom_point(aes(log_articles,log_rate))+
+  geom_smooth(aes(log_articles,log_rate, method="lm"))+
+  xlab('Log transformed number of articles')+
+  ylab("Log transformed rate of suicides")+
+  ggtitle("Association of Suicide rate and number of articles")+
+  theme_economist()+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+When adding year and state as covariates in the model, we add additional complexity and our data is limited in its sample size. Ideally, we would have liked to do this analysis by exploring non linear regession methods as residual plot shows dicernible pattern suggesting the asscoaition may not be linear. In summary, based on the univariate model, we examined a significantly negative effect of media coverage on actual suicide rate on a national scale for year 2011 to 2016. On average, the log(suicide rate (#/100,000 population)) is expected to decrease by 0.077 for every one unit increase in log(#articles) (p<0.001). 
+
+In addition, based on the refined model, there is actually no significant association between number of articles and actual suicide rate (p=0.381) after adjusting for year and state, and this might be highly due to the fact that the relation between media and suicide is not linear and the model is misspecified. A better model could be built in the future if we have more information on other potential counfounders, such as weather, psychological factors as well as social economic indicators. 
+
+```{r, warning= FALSE }
+full_reg <- full[ ,c(1,2,7,8)]
+m2 <- glm(log_rate~log_articles+factor(year)+factor(state_abb), data= full_reg)
+tidy((m2))
+plot(m2)
+```
+
+
+###STUDY FINDINGS
+Suicide distribution in the real world changed greatly from 2011 to 2016. Our national trend plot for the actual suicide rate indicated that in recent years, the US society is experiencing a severe increasing suicide problem. Mississippi, Montana, Alaska and Alabama are four states with the highest suicide rate among all the states from 2011 to 2016. At the same time, there is an obvious increase in the number of published suicide-related articles, across all the states, with a spike from late 2016 through 2018.  
+
+Based on the media-suicide rate combined evidence analysis, we examined an increasingly negative correlation between media and suicide rate from 2011 to 2016, which supports our hypothesis that there is an effect of media coverage on reducing suicide incidence. Based on the univariate regression model, we examined a significantly negative effect of media coverage on actual suicide rate on the national scale for year 2011 to 2016. On average, the log(suicide rate (#/100,000 population)) is expected to decrease by 0.077 for every one unit increase in log(#articles) (p<0.001). After adjusting for year and state, the signal disappeared, which could possibly be explained by the fact that media coverage actually has different influence on different states and in different years.  
+
+Ideally, we would also like to explore the effect of different media types on reducing the suicide rate, however, we have many missing values on media type and after we merged the data, we cannot draw any solid conclusion based on the limited number of pieces of information on media types. 
+
+###LITERATURES AND ONLINE SOURCES  
+[1] Stack, S. (2003). Media coverage as a risk factor in suicide. Journal of Epidemiology & Community Health, 57(4), 238-240.  
+[2] https://wonder.cdc.gov/controller/datarequest/D76;jsessionid=CBFDF749F7DE6A007D0F42C953B3E3A7  
+[3] https://mediacloud.org/  
