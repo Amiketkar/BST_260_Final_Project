@@ -11,7 +11,7 @@ With increase in rates of suicides, media attention for this issue has increased
 Therefore, we are interested in analyzing and tracking how changes in media coverage of suicide and suicide-related topics over time impact actual suicide rates in the United States. In order to do this, we use suicide data from the CDC and media data from MediaCloud to analyze trends and **these questions** though data visualization as well as correlation check and linear regression.
 
 ###RESEARCH QUESTION
-**How media coverage on suicide affects the actual suicide rate across the US states?**  
+**How does media coverage on suicide affect the actual suicide rate across the US states?**  
 
 ###DATA SOURCE
 The actual suicide rate epidemiology data was requested throught the US CDC wonder database [2]. We only used ICD-10 X60-X84 to refer to direct intentional self-harm. Y87.0 is unclarified death after previous suicide intentions. We restricted our search to the following criteria: 1) All US states, 2) All genders, 3) All races, 4) 1999-2016. The cdc data, 'cdc', contains information on year, state, gender, race, death, population, crude rate in the form of counts per 100,000 population, crude rate se and percentages of total death (%).   
