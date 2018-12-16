@@ -29,8 +29,9 @@ ui <- tagList(
                      frequency and content of their suicide coverage in an effort to reduce copycat effects"),
              tags$h4("Therefore, we are interested in analyzing and tracking how changes in media coverage of suicide and suicide-related 
                      topics over time impact actual suicide rates in the United States."),
-             column(8, offset=2, tags$img(src="cloud.png", height=500, width=800)),
-             column(4, offset=8, tags$h5("Contributors: Amita Ketkar, Jui Kothari, Xinye Qiu, Yiwen Zhang")),
+             column(8, offset=2, tags$video(src="video.mp4", type="video/mp4", autoplay=NA, controls="controls", height=500, width=800)),
+             #column(8, offset=2, tags$img(src="cloud.png", height=500, width=800)),
+             #column(4, offset=8, tags$h5("Contributors: Amita Ketkar, Jui Kothari, Xinye Qiu, Yiwen Zhang")),
              column(8, offset=8, tags$h5("Contact us at:",tags$a("yzhang@hsph.harvard.edu")) ),
              column(8, offset=8, tags$h5("More information:", tags$a("https://github.com/Amiketkar/BST_260_Final_Project"))),
              tags$br(),
