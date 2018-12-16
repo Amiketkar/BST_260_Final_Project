@@ -4,7 +4,7 @@ author: Amita Ketkar, Jui Kothari, Xinye Qiu, Yiwen Zhang (In alphabetic order)
 date: 2018-12-15
 output: html_document
 ---
-
+####QUICK LINK TO OUR WEBSITE:(https://bst260-final-media-suicide.shinyapps.io/shinyapp/)
 ###MOTIVATION
 With increase in rates of suicides, media attention for this issue has increased over the years. A review by Stack, S [1]. combing the evidence from a total of 293 findings from 42 studies on the impact of publicized suicide stories in the media on actual suicde rate in the world, showed that, based on logistic regression analysis, the effect of either an entertainment or political celebrity suicide story were 14.3 times more likely to find a copycat effect than studies that did not. And a review of recent events in Austria and Switzerland indicates that suicide prevention organizations can successfully convince the media to change the frequency and content of their suicide coverage in an effort to reduce copycat effects. 
 
@@ -354,7 +354,7 @@ cdc_state %>% filter(year=='2016') %>% arrange(desc(state_rate))
 ```
 
 
-####US SUICIDE MAPS (RECENT YEAR SUICDE RATE ACORSS THE NATION FOR YEAR 2011 TO 2016)  
+####US SUICIDE MAPS (RECENT YEAR SUICDE RATE ACROSS THE NATION FOR YEAR 2011 TO 2016)  
 With the purpose of better examing the spatial difference of suicide rate across different US states, we constructed 6 US maps showing the suicide rate in each state for each year ranging from 2011 to 2016 and compared to the media coverage in that year. We could see that the suicide distribution changed greatly from 2011 to 2016.   
 1) In 2011, Western states and south-eastern states experiened the most cases of suicide among all the states while the middle and northern part is much better.    
 2) In 2012, the suicide incidence center shifted a little bit to north-western part with obvious decreasing cases in California and some of the south-eastern states.    
@@ -584,7 +584,7 @@ top_n(diff,10)
 ####COMBINED ANALYSIS
 In order to compare the time-trend of suicide death rate to the time-trend of media reporting on suicide-related topics, we combined the CDC suicide data with the media data. The combined data includes the year, state, suicide rate (deaths per 1 million people), and number of articles published in that state. We made further comparisons individually for each state.
 
-```{r}
+```{r,warning=FALSE}
 ###COMBINE CDC AND MEDIA DATA
 #In the CDC data, create 'rate_pmil' which is the crude rate per million people i.e. the number of deaths per state population per 1 million people
 cdc_data <- read.csv("new_cdc.csv")
@@ -737,6 +737,6 @@ Based on the media-suicide rate combined evidence analysis, we examined an incre
 Ideally, we would also like to explore the effect of different media types on reducing the suicide rate, however, we have many missing values on media type and after we merged the data, we cannot draw any solid conclusion based on the limited number of pieces of information on media types. 
 
 ###LITERATURES AND ONLINE SOURCES  
-[1] Stack, S. (2003). Media coverage as a risk factor in suicide. Journal of Epidemiology & Community Health, 57(4), 238-240.
-[2] https://wonder.cdc.gov/controller/datarequest/D76;jsessionid=CBFDF749F7DE6A007D0F42C953B3E3A7
-[3] https://mediacloud.org/
+[1] Stack, S. (2003). Media coverage as a risk factor in suicide. Journal of Epidemiology & Community Health, 57(4), 238-240.  
+[2] https://wonder.cdc.gov/controller/datarequest/D76;jsessionid=CBFDF749F7DE6A007D0F42C953B3E3A7  
+[3] https://mediacloud.org/  
